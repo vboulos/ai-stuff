@@ -1,0 +1,104 @@
+{
+  "test_results": [
+    {
+      "test_name": "test_user_authentication",
+      "test_class": "TestUserAuth", 
+      "status": "passed",
+      "message": "",
+      "file_path": "tests/test_auth.py",
+      "line_number": 15,
+      "duration": 0.142,
+      "stack_trace": ""
+    },
+    {
+      "test_name": "test_calculate_total_price",
+      "test_class": "TestPriceCalculation",
+      "status": "failed",
+      "message": "AssertionError: assert 35.0 == 30.0\n +  where 35.0 = calculate_total([{'price': 10.0, 'quantity': 2}, {'price': 5.0, 'quantity': 3}])",
+      "file_path": "tests/test_calculator.py",
+      "line_number": 25,
+      "duration": 0.089,
+      "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_calculator.py\", line 25, in test_calculate_total_price\n    assert result == 30.0\nAssertionError: assert 35.0 == 30.0"
+    },
+    {
+      "test_name": "test_database_connection",
+      "test_class": "TestDatabase",
+      "status": "passed", 
+      "message": "",
+      "file_path": "tests/test_db.py",
+      "line_number": 8,
+      "duration": 0.234,
+      "stack_trace": ""
+    },
+    {
+      "test_name": "test_apply_discount",
+      "test_class": "TestPriceCalculation",
+      "status": "failed",
+      "message": "TypeError: unsupported operand type(s) for -: 'float' and 'str'",
+      "file_path": "tests/test_calculator.py", 
+      "line_number": 42,
+      "duration": 0.067,
+      "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_calculator.py\", line 42, in test_apply_discount\n    result = apply_discount(100.0, '20')\n  File \"src/calculator.py\", line 15, in apply_discount\n    discount_amount = price * discount_percent / 100\nTypeError: unsupported operand type(s) for -: 'float' and 'str'"
+    },
+    {
+      "test_name": "test_user_registration",
+      "test_class": "TestUserAuth",
+      "status": "failed",
+      "message": "AttributeError: 'NoneType' object has no attribute 'email'",
+      "file_path": "tests/test_auth.py",
+      "line_number": 58,
+      "duration": 0.134,
+      "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_auth.py\", line 58, in test_user_registration\n    assert new_user.email == 'test@example.com'\nAttributeError: 'NoneType' object has no attribute 'email'"
+    },
+    {
+      "test_name": "test_file_upload",
+      "test_class": "TestFileOperations",
+      "status": "skipped",
+      "message": "Skipped due to missing test file",
+      "file_path": "tests/test_files.py",
+      "line_number": 12,
+      "duration": 0.001,
+      "stack_trace": ""
+    },
+    {
+      "test_name": "test_api_endpoint_response",
+      "test_class": "TestAPI",
+      "status": "failed",
+      "message": "IndexError: list index out of range",
+      "file_path": "tests/test_api.py",
+      "line_number": 33,
+      "duration": 0.178,
+      "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_api.py\", line 33, in test_api_endpoint_response\n    first_item = response_data['items'][0]\nIndexError: list index out of range"
+    },
+    {
+      "test_name": "test_data_validation",
+      "test_class": "TestValidation",
+      "status": "passed",
+      "message": "",
+      "file_path": "tests/test_validation.py", 
+      "line_number": 19,
+      "duration": 0.045,
+      "stack_trace": ""
+    },
+    {
+      "test_name": "test_missing_module_import",
+      "test_class": "TestImports",
+      "status": "error",
+      "message": "ModuleNotFoundError: No module named 'nonexistent_module'",
+      "file_path": "tests/test_imports.py",
+      "line_number": 5,
+      "duration": 0.002,
+      "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_imports.py\", line 5, in test_missing_module_import\n    import nonexistent_module\nModuleNotFoundError: No module named 'nonexistent_module'"
+    },
+    {
+      "test_name": "test_configuration_loading",
+      "test_class": "TestConfig",
+      "status": "failed",
+      "message": "KeyError: 'database_url'",
+      "file_path": "tests/test_config.py",
+      "line_number": 28,
+      "duration": 0.056,
+      "stack_trace": "Traceback (most recent call last):\n  File \"tests/test_config.py\", line 28, in test_configuration_loading\n    db_url = config['database_url']\nKeyError: 'database_url'"
+    }
+  ]
+}

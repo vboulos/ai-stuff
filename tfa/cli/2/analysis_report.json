@@ -1,0 +1,24 @@
+{
+  "generated_at": "2025-09-09T09:29:01.453115",
+  "total_failed_tests": 3,
+  "failed_tests": [
+    {
+      "test_name": "test_calculate_total",
+      "failure_message": "AssertionError: assert 35.0 == 30.0\n +  where 35.0 = calculate_total([{'price': 10.0, 'quantity': 2}, {'price': 5.0, 'quantity': 3}])",
+      "root_cause": "Analysis failed: Command '['claude', \"\\nAnalyze this test failure:\\n\\nTest: test_calculate_total\\nError: AssertionError: assert 35.0 == 30.0\\n +  where 35.0 = calculate_total([{'price': 10.0, 'quantity': 2}, {'price': 5.0, 'quantity': 3}])\\n\\nProvide:\\n1. ROOT CAUSE: What's causing this failure?\\n2. CODE FIX: Specific code changes to fix it\\n\\nFormat:\\nROOT CAUSE: [your analysis]\\nCODE FIX: [your fix suggestion]\\n\", '-m', 'claude-3-5-sonnet-20240620']' returned non-zero exit status 1.",
+      "code_fix": "Could not generate fix suggestion"
+    },
+    {
+      "test_name": "test_divide_by_zero",
+      "failure_message": "ZeroDivisionError: division by zero",
+      "root_cause": "Analysis failed: Command '['claude', \"\\nAnalyze this test failure:\\n\\nTest: test_divide_by_zero\\nError: ZeroDivisionError: division by zero\\n\\nProvide:\\n1. ROOT CAUSE: What's causing this failure?\\n2. CODE FIX: Specific code changes to fix it\\n\\nFormat:\\nROOT CAUSE: [your analysis]\\nCODE FIX: [your fix suggestion]\\n\", '-m', 'claude-3-5-sonnet-20240620']' returned non-zero exit status 1.",
+      "code_fix": "Could not generate fix suggestion"
+    },
+    {
+      "test_name": "test_user_creation",
+      "failure_message": "TypeError: unsupported operand type(s) for +: 'int' and 'str'",
+      "root_cause": "Analysis failed: Command '['claude', \"\\nAnalyze this test failure:\\n\\nTest: test_user_creation\\nError: TypeError: unsupported operand type(s) for +: 'int' and 'str'\\n\\nProvide:\\n1. ROOT CAUSE: What's causing this failure?\\n2. CODE FIX: Specific code changes to fix it\\n\\nFormat:\\nROOT CAUSE: [your analysis]\\nCODE FIX: [your fix suggestion]\\n\", '-m', 'claude-3-5-sonnet-20240620']' returned non-zero exit status 1.",
+      "code_fix": "Could not generate fix suggestion"
+    }
+  ]
+}

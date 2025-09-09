@@ -1,0 +1,26 @@
+{
+  "test_results": [
+    {
+      "name": "GRC: Test export CSV functionality in GRC pages",
+      "status": "failed",
+      "failure_message":"Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'",
+      "framework": "pytest"
+    },
+    {
+      "name": "test_database_connection",
+      "status": "failed",
+      "failure_message": "psycopg2.OperationalError: could not connect to server: Connection refused\nIs the server running on host \"localhost\" (127.0.0.1) and accepting TCP/IP connections on port 5432?",
+      "framework": "pytest"
+    },
+    {
+      "name": "test_cypress_text_assertion",
+      "status": "failed",
+      "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule'",
+      "framework": "cypress"
+    },
+    {
+      "name": "test_successful_operation",
+      "status": "passed"
+    }
+  ]
+}

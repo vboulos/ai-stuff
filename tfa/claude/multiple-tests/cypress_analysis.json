@@ -1,0 +1,19 @@
+{
+  "analysis_summary": {
+    "total_tests": 1,
+    "failed_tests": 1,
+    "successful_analyses": 1,
+    "average_confidence": 0.95
+  },
+  "test_analyses": [
+    {
+      "test_name": "cypress_policy_text_test",
+      "framework": "cypress",
+      "root_cause": "The test is failing because of a missing space in the actual text. The expected text has a space after \"acm-dr-virt-config-file-name.\" but the actual text shows \"acm-dr-virt-config-file-name.Creates\" (no space before \"Creates\").",
+      "suggested_fix": "Add a space after the period in the policy description text where it says \"acm-dr-virt-config-file-name.\" so it reads \"acm-dr-virt-config-file-name. Creates\" instead of \"acm-dr-virt-config-file-name.Creates\".",
+      "code_example": "```javascript\n// In the component or template generating this text:\n- 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...'\n+ 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule...'\n```",
+      "confidence_score": 0.95,
+      "original_failure": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'"
+    }
+  ]
+}

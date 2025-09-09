@@ -1,0 +1,38 @@
+I need you to analyze this test failure and provide a structured response.
+
+**TEST FAILURE ANALYSIS REQUEST**
+
+Test Details:
+- Test ID: TC001
+- Test Name: GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI
+- Test Suite: GRC: Test export CSV functionality in GRC pages
+- Duration: 0.0000s
+
+Error Message:
+Timed out retrying after 120000ms: expected <dd.pf-v5-c-description-list__description> to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'
+
+Full Error Details:
+AssertionError: Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'
+    at eval (webpack://acmqe-grc-test/./tests/cypress/support/views.js:4742:80)
+    at Array.forEach (<anonymous>)
+    at Context.eval (webpack://acmqe-grc-test/./tests/cypress/support/views.js:4730:26)
+
+**PLEASE RESPOND IN THIS EXACT FORMAT:**
+
+FAILURE_TYPE: [Choose ONE from: automation_bug, product_bug, assertion_error, timing_issue, environment_issue, configuration_issue, data_issue, network_issue, dependency_issue, flaky_test]
+
+ROOT_CAUSE: [One clear sentence explaining what caused this failure]
+
+FIX_SUGGESTION: [Detailed, actionable steps to fix this issue]
+
+FIX_CODE: [Actual code to solve the problem - use proper syntax for the testing framework]
+
+**ANALYSIS GUIDELINES:**
+- If expected vs actual text differs only by spacing/formatting → assertion_error
+- If timeout while waiting for elements/content → timing_issue  
+- If element not found/wrong selector → automation_bug
+- If API/network related → network_issue
+- If environment/infrastructure issues → environment_issue
+- If application logic is broken → product_bug
+
+Focus on practical, implementable solutions. Be specific about what needs to be changed in the test code or application.

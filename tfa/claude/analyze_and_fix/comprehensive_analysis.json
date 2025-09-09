@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "generated_at": "2025-09-09T18:19:08.247617",
+    "input_file": "failed_tests.json",
+    "processing_mode": "analysis_and_fixes",
+    "total_tests_in_input": 1,
+    "failed_tests_found": 1,
+    "tests_processed": 1,
+    "claude_timeout": 120,
+    "max_workers": 3
+  },
+  "statistics": {
+    "processing_time_seconds": 128.71,
+    "total_processed": 1,
+    "successful_analyses": 1,
+    "failed_analyses": 0,
+    "analysis_success_rate": 1.0,
+    "successful_fixes": 0,
+    "failed_fixes": 1,
+    "fix_success_rate": 0.0,
+    "fix_summary": {
+      "total_fixes": 1,
+      "successful_fixes": 0,
+      "failed_fixes": 1,
+      "success_rate": 0.0,
+      "fix_type_distribution": {},
+      "priority_distribution": {},
+      "effort_distribution": {}
+    },
+    "average_confidence": 0.95
+  },
+  "test_results": [
+    {
+      "test_name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+        "status": "failed",
+        "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'",
+        "framework": "junit"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test is failing due to a missing space character in the expected text. The test expects the text to contain \" Creates a velero Schedule\" (with a space before \"Creates\"), but the actual text has \"Creates a velero Schedule\" (without the leading space). This is a text formatting/spacing issue where a space character that should separate two sentences is missing in the UI rendering.",
+        "suggested_fix": "Fix the text formatting in the UI component that renders this policy description to ensure proper spacing between sentences. This likely involves adding a space character in the template or data source that generates this description text.",
+        "code_example": "```javascript\n// In the component rendering the policy description:\n// Change from:\ndescription: `Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...`\n\n// To:\ndescription: `Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule...`\n\n// Or in the test, update the expected text to match actual formatting:\n// Change the assertion to expect the text without the space if that's the intended format\n```",
+        "confidence_score": 0.95,
+        "error_category": "assertion",
+        "severity": "low",
+        "raw_response": "**ROOT CAUSE:**\nThe test is failing due to a missing space character in the expected text. The test expects the text to contain \" Creates a velero Schedule\" (with a space before \"Creates\"), but the actual text has \"Creates a velero Schedule\" (without the leading space). This is a text formatting/spacing issue where a space character that should separate two sentences is missing in the UI rendering.\n\n**SUGGESTED FIX:**\nFix the text formatting in the UI component that renders this policy description to ensure proper spacing between sentences. This likely involves adding a space character in the template or data source that generates this description text.\n\n**CODE EXAMPLE:**\n```javascript\n// In the component rendering the policy description:\n// Change from:\ndescription: `Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...`\n\n// To:\ndescription: `Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule...`\n\n// Or in the test, update the expected text to match actual formatting:\n// Change the assertion to expect the text without the space if that's the intended format\n```\n\n**CONFIDENCE:**\n0.95\n\n**ERROR_CATEGORY:**\nassertion\n\n**SEVERITY:**\nlow",
+        "analyzed_at": "2025-09-09T18:17:08.223108"
+      },
+      "fix_suggestion": {
+        "success": false,
+        "error": "Claude CLI timeout after 120 seconds",
+        "suggested_at": "2025-09-09T18:19:08.247369"
+      }
+    }
+  ]
+}

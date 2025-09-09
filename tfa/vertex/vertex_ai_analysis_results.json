@@ -1,0 +1,42 @@
+[
+  {
+    "test_case_id": "TC001",
+    "test_case_name": "test_user_login_authentication",
+    "failure_message": "AssertionError: Expected status code 200, but got 401 Unauthorized",
+    "failure_type": "unknown",
+    "fix_suggestion": "Error analyzing test case: Error code: 404 - {'error': {'code': 404, 'message': 'Publisher Model `projects/itpc-gcp-hcm-pe-eng-claude/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20241022` not found.', 'status': 'NOT_FOUND'}}",
+    "fix_code": ""
+  },
+  {
+    "test_case_id": "TC002",
+    "test_case_name": "test_database_connection",
+    "failure_message": "ConnectionError: could not connect to server: Connection refused",
+    "failure_type": "unknown",
+    "fix_suggestion": "Error analyzing test case: Error code: 404 - {'error': {'code': 404, 'message': 'Publisher Model `projects/itpc-gcp-hcm-pe-eng-claude/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20241022` not found.', 'status': 'NOT_FOUND'}}",
+    "fix_code": ""
+  },
+  {
+    "test_case_id": "TC003",
+    "test_case_name": "test_api_response_timeout",
+    "failure_message": "TimeoutError: Request timed out after 30 seconds",
+    "failure_type": "unknown",
+    "fix_suggestion": "Error analyzing test case: Error code: 404 - {'error': {'code': 404, 'message': 'Publisher Model `projects/itpc-gcp-hcm-pe-eng-claude/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20241022` not found.', 'status': 'NOT_FOUND'}}",
+    "fix_code": ""
+  },
+  {
+    "test_case_id": "TC004",
+    "test_case_name": "test_element_selector",
+    "failure_message": "NoSuchElementException: Unable to locate element with id 'submit-button'",
+    "failure_type": "unknown",
+    "fix_suggestion": "Error analyzing test case: Error code: 404 - {'error': {'code': 404, 'message': 'Publisher Model `projects/itpc-gcp-hcm-pe-eng-claude/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20241022` not found.', 'status': 'NOT_FOUND'}}",
+    "fix_code": ""
+  },
+  {
+    "test_case_id": "TC005",
+    "test_case_name": "test_calculation_logic",
+    "failure_message": "AssertionError: Expected total 100.0 but got 110.0",
+    "failure_type": "unknown",
+    "fix_suggestion": "Error analyzing test case: Error code: 404 - {'error': {'code': 404, 'message': 'Publisher Model `projects/itpc-gcp-hcm-pe-eng-claude/locations/us-east5/publishers/anthropic/models/claude-3-5-sonnet@20241022` not found.', 'status': 'NOT_FOUND'}}",
+    "fix_code": ""
+  }
+]

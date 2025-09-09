@@ -1,0 +1,29 @@
+[
+  {
+    "test_case_id": "TC001",
+    "test_case_name": "test_user_login_authentication",
+    "failure_message": "AssertionError: Expected status code 200, but got 401 Unauthorized"
+  },
+  {
+    "test_case_id": "TC002",
+    "test_case_name": "test_database_connection",
+    "failure_message": "ConnectionError: could not connect to server: Connection refused"
+  },
+  {
+    "test_case_id": "TC003",
+    "test_case_name": "test_api_response_timeout",
+    "failure_message": "TimeoutError: Request timed out after 30 seconds"
+  },
+  {
+    "test_case_id": "TC004",
+    "test_case_name": "test_element_selector",
+    "failure_message": "NoSuchElementException: Unable to locate element with id 'submit-button'",
+    "test_code": "submit_btn = driver.find_element(By.ID, 'submit-button')\nsubmit_btn.click()"
+  },
+  {
+    "test_case_id": "TC005",
+    "test_case_name": "test_calculation_logic",
+    "failure_message": "AssertionError: Expected total 100.0 but got 110.0",
+    "test_code": "order = Order()\norder.add_item('Product', 100.0)\ntotal = order.calculate_total()\nassert total == 100.0"
+  }
+]

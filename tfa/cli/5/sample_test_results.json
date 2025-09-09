@@ -1,0 +1,34 @@
+{
+  "test_results": [
+    {
+      "name": "test_user_login",
+      "status": "passed",
+      "duration": 1.2,
+      "framework": "pytest"
+    },
+    {
+      "name": "test_user_authentication", 
+      "status": "failed",
+      "failure_message": "AssertionError: Expected status code 200, but got 401\nResponse: {'error': 'Invalid authentication token'}",
+      "file_path": "tests/test_auth.py",
+      "line_number": 45,
+      "framework": "pytest"
+    },
+    {
+      "name": "test_database_connection",
+      "status": "failed", 
+      "failure_message": "psycopg2.OperationalError: could not connect to server: Connection refused\nIs the server running on host \"localhost\" (127.0.0.1) and accepting TCP/IP connections on port 5432?",
+      "file_path": "tests/test_database.py",
+      "line_number": 23,
+      "framework": "pytest"
+    },
+    {
+      "name": "test_timeout_error",
+      "status": "failed",
+      "failure_message": "TimeoutError: Request timed out after 30 seconds\nExpected: API should respond within timeout\nActual: No response received",
+      "file_path": "tests/test_api.py", 
+      "line_number": 89,
+      "framework": "pytest"
+    }
+  ]
+}

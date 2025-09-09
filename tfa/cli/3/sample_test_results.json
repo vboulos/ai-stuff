@@ -1,0 +1,59 @@
+{
+  "test_results": [
+    {
+      "test_name": "test_user_login_success",
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "test_name": "test_calculate_price_with_discount",
+      "status": "failed",
+      "message": "AssertionError: assert 90.0 == 80.0\n +  where 90.0 = calculate_discounted_price(100.0, 10)\n +  and   80.0 = 80.0"
+    },
+    {
+      "test_name": "test_divide_numbers",
+      "status": "failed", 
+      "message": "ZeroDivisionError: division by zero"
+    },
+    {
+      "test_name": "test_user_registration",
+      "status": "failed",
+      "message": "TypeError: unsupported operand type(s) for +: 'int' and 'str'\n  File \"user_service.py\", line 42, in create_user\n    user_id = base_id + suffix"
+    },
+    {
+      "test_name": "test_fetch_user_profile",
+      "status": "failed",
+      "message": "AttributeError: 'NoneType' object has no attribute 'email'\n  File \"profile_service.py\", line 15, in get_profile\n    return user.email"
+    },
+    {
+      "test_name": "test_database_connection",
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "test_name": "test_import_missing_module",
+      "status": "error",
+      "message": "ModuleNotFoundError: No module named 'nonexistent_library'\n  File \"analytics.py\", line 5, in <module>\n    import nonexistent_library"
+    },
+    {
+      "test_name": "test_list_access_out_of_bounds",
+      "status": "failed",
+      "message": "IndexError: list index out of range\n  File \"data_processor.py\", line 23, in process_items\n    first_item = items[0]"
+    },
+    {
+      "test_name": "test_api_response_parsing",
+      "status": "failed",
+      "message": "KeyError: 'data'\n  File \"api_client.py\", line 67, in parse_response\n    return response['data']['results']"
+    },
+    {
+      "test_name": "test_password_validation",
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "test_name": "test_concurrent_access",
+      "status": "failed",
+      "message": "TimeoutError: Operation timed out after 30 seconds"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "analysis_summary": {
+    "total_failures": 4,
+    "successful_analyses": 4,
+    "failed_analyses": 0,
+    "success_rate": 1.0,
+    "average_confidence": 0.7,
+    "generated_by": "Claude CLI Sonnet 4",
+    "timestamp": "Tue Sep  9 09:48:11 EDT 2025"
+  },
+  "results": [
+    {
+      "test_name": "test_user_authentication",
+      "failure_message": "AssertionError: Expected status code 200, but got 401\n  at test_user_authentication (test_auth.py:45)\n  at authenticate_user('invalid_token')\n  Response: {'error': 'Invalid authentication token'}",
+      "root_cause": "Analysis provided by Claude",
+      "suggested_fix": "I need permission to read the file you've specified. Could you please grant me access to read the file at `/var/folders/mf/3w08m47j5szgrgxk19hk71480000gn/T/tmpp2o46yp1.txt`?",
+      "code_example": null,
+      "confidence_score": 0.7,
+      "analysis_successful": true,
+      "error_message": null
+    },
+    {
+      "test_name": "test_database_connection",
+      "failure_message": "psycopg2.OperationalError: could not connect to server: Connection refused\n  Is the server running on host \"localhost\" (127.0.0.1) and accepting TCP/IP connections on port 5432?",
+      "root_cause": "Analysis provided by Claude",
+      "suggested_fix": "I need permission to read that file. Please grant access so I can see what you'd like me to help with.",
+      "code_example": null,
+      "confidence_score": 0.7,
+      "analysis_successful": true,
+      "error_message": null
+    },
+    {
+      "test_name": "test_api_rate_limiting",
+      "failure_message": "TimeoutError: Request timed out after 30 seconds\n  at test_api_rate_limiting (test_api.py:67)\n  Expected: API should respond within rate limit\n  Actual: No response received",
+      "root_cause": "Analysis provided by Claude",
+      "suggested_fix": "I need permission to read the temporary file you've provided. Could you grant me access to read from that path so I can help you with whatever task you have in mind?",
+      "code_example": null,
+      "confidence_score": 0.7,
+      "analysis_successful": true,
+      "error_message": null
+    },
+    {
+      "test_name": "test_data_validation",
+      "failure_message": "ValueError: invalid literal for int() with base 10: 'abc'\n  at test_data_validation (test_validation.py:12)\n  at validate_age('abc')\n  Expected age to be converted to integer",
+      "root_cause": "Analysis provided by Claude",
+      "suggested_fix": "I need permission to read the file you've provided. Could you grant me access to read `/var/folders/mf/3w08m47j5szgrgxk19hk71480000gn/T/tmppnutekq1.txt`?",
+      "code_example": null,
+      "confidence_score": 0.7,
+      "analysis_successful": true,
+      "error_message": null
+    }
+  ]
+}

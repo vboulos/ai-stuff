@@ -1,0 +1,149 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-09-09T14:57:36.931351",
+    "generator": "Claude CLI Test Failure Analyzer",
+    "version": "1.0.0",
+    "total_failures_analyzed": 2
+  },
+  "executive_summary": {
+    "total_failures": 2,
+    "average_confidence_score": 0.7,
+    "high_confidence_analyses": 0,
+    "low_confidence_analyses": 0,
+    "effort_distribution": {
+      "low": 1,
+      "medium": 1
+    },
+    "fix_category_distribution": {
+      "code_change": 1,
+      "environment": 1
+    },
+    "framework_distribution": {},
+    "reports_with_code_examples": 2,
+    "reports_with_prevention_tips": 2,
+    "quick_wins": 1,
+    "complex_fixes": 0
+  },
+  "insights_and_patterns": {
+    "common_failure_patterns": [
+      {
+        "pattern": "authentication",
+        "frequency": 3
+      },
+      {
+        "pattern": "receiving",
+        "frequency": 2
+      },
+      {
+        "pattern": "expected",
+        "frequency": 2
+      },
+      {
+        "pattern": "indicating",
+        "frequency": 2
+      },
+      {
+        "pattern": "either",
+        "frequency": 2
+      },
+      {
+        "pattern": "postgresql",
+        "frequency": 2
+      },
+      {
+        "pattern": "database",
+        "frequency": 2
+      },
+      {
+        "pattern": "running",
+        "frequency": 2
+      },
+      {
+        "pattern": "connection",
+        "frequency": 2
+      }
+    ],
+    "framework_specific_issues": {},
+    "effort_vs_confidence_analysis": {
+      "low": {
+        "count": 1,
+        "avg_confidence": 0.7
+      },
+      "medium": {
+        "count": 1,
+        "avg_confidence": 0.7
+      }
+    },
+    "top_prevention_strategies": [
+      "Implement proper test setup and teardown",
+      "Add comprehensive error handling and logging"
+    ]
+  },
+  "test_failure_details": [
+    {
+      "test_name": "test_user_authentication",
+      "failure_message": "AssertionError: Expected status code 200, but got 401\nResponse: {'error': 'Invalid authentication token'}",
+      "root_cause": "The test is receiving a 401 Unauthorized status code instead of the expected 200 OK, with an error message indicating \"Invalid authentication token\". This suggests the test is either using an invalid/expired authentication token, no token at all, or the authentication mechanism in the test setup is not properly configured.",
+      "suggested_fix": "**\nThe authentication test is failing because it's not properly setting up valid authentication credentials before making the API request. Here's a step-by-",
+      "code_example": "**\n```python\nimport pytest\nfrom your_app import create_app, db\nfrom your_app.models import User\nfrom your_app.auth import generate_token",
+      "framework_specific_advice": "**\n- Use pytest fixtures to manage test data lifecycle and ensure proper cleanup\n- Leverage dependency injection to provide authenticated users to tests that need them\n- Consider using factory patterns or tools like Factory Boy to create test data consistently\n- Mock external authentication services if your app integrates with OAuth providers\n- Use database transactions that can be rolled back to keep tests isolated\n- Create helper methods for common authentication patterns to reduce code duplication\n\n**",
+      "prevention_tips": "**\n1. Create a base test class with authentication helpers that other tests can inherit\n2. Use clear naming conventions for tests that require authentication vs. anonymous access\n3. Implement test data factories that automatically create valid user credentials\n4. Add integration tests that verify the entire authentication flow end-to-end\n5. Use environment-specific configuration to ensure test authentication doesn't interfere with production\n6. Document authentication requirements clearly in test docstrings\n7. Consider using test containers or isolated test databases to prevent data conflicts\n\n**",
+      "confidence_score": 0.7,
+      "effort_estimate": "low",
+      "fix_category": "code_change",
+      "analysis_timestamp": "2025-09-09T14:57:36.931128",
+      "file_path": null,
+      "line_number": null,
+      "framework": null
+    },
+    {
+      "test_name": "test_database_connection",
+      "failure_message": "psycopg2.OperationalError: could not connect to server: Connection refused\nIs the server running on host \"localhost\" (127.0.0.1) and accepting TCP/IP connections on port 5432?",
+      "root_cause": "The PostgreSQL database server is not running or not accessible on the expected host/port combination (localhost:5432). The test is attempting to establish a database connection but receiving a connection refused error, indicating either the PostgreSQL service is stopped, not installed, running on a different port, or blocked by firewall/network configuration.",
+      "suggested_fix": "**\nThis is a database connectivity issue where the test is trying to connect to PostgreSQL but the database server is not running or accessible. The fix involves setting up a proper test database environment and ensuring PostgreSQL is running. Here's the step-by-",
+      "code_example": "**\n```python\n# conftest.py - Test configuration and fixtures\nimport pytest\nimport psycopg2\nfrom psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT\nimport os\nimport time\n\n# Test database configuration\nTEST_DB_CONFIG = {\n    'host': os.getenv('TEST_DB_HOST', 'localhost'),\n    'port': os.getenv('TEST_DB_PORT', '5432'),\n    'user': os.getenv('TEST_DB_USER', 'postgres'),\n    'password': os.getenv('TEST_DB_PASSWORD', ''),\n    'database': os.getenv('TEST_DB_NAME', 'test_database')\n}\n\ndef wait_for_db(config, max_retries=30, delay=1):\n    \"\"\"Wait for database to be available with retry logic.\"\"\"\n    for attempt in range(max_retries):",
+      "framework_specific_advice": "**\n- Use pytest fixtures for database setup/teardown to ensure clean test state\n- Implement connection pooling for better performance in test suites\n- Use environment variables for database configuration to support different environments\n- Consider using pytest-postgresql plugin for automatic PostgreSQL management\n- Implement database migrations in test setup to ensure schema consistency\n- Use transaction rollback patterns for faster test execution\n\n**",
+      "prevention_tips": "**\n1. Use Docker Compose for consistent test environments across team members\n2. Add database health checks to CI/CD pipelines before running tests\n3. Implement retry logic with exponential backoff for database connections\n4. Use separate test databases to avoid conflicts with development data\n5. Document database setup requirements in project README\n6. Add pre-test hooks to verify database availability\n7. Consider using in-memory databases like SQLite for unit tests when possible\n\n**",
+      "confidence_score": 0.7,
+      "effort_estimate": "medium",
+      "fix_category": "environment",
+      "analysis_timestamp": "2025-09-09T14:57:36.931270",
+      "file_path": null,
+      "line_number": null,
+      "framework": null
+    }
+  ],
+  "recommendations": {
+    "immediate_actions": [],
+    "short_term_improvements": [
+      "Address test_database_connection: The PostgreSQL database server is not running or not accessible on the expected ..."
+    ],
+    "long_term_strategies": [],
+    "priority_fixes": [
+      {
+        "test_name": "test_user_authentication",
+        "priority_reason": "High confidence (0.70) analysis available",
+        "effort": "low"
+      },
+      {
+        "test_name": "test_database_connection",
+        "priority_reason": "High confidence (0.70) analysis available",
+        "effort": "medium"
+      }
+    ]
+  },
+  "appendix": {
+    "methodology": "Test failures analyzed using Claude CLI for root cause analysis and fix suggestions",
+    "confidence_scoring": "Confidence scores range from 0.0 to 1.0, representing analysis certainty",
+    "effort_estimates": {
+      "low": "Quick fixes, typically 1-2 hours",
+      "medium": "Moderate changes, typically 2-8 hours",
+      "high": "Complex changes, typically 1+ days"
+    },
+    "fix_categories": {
+      "code_change": "Requires modifying test or application code",
+      "configuration": "Requires configuration changes",
+      "environment": "Requires environment setup or infrastructure changes"
+    }
+  }
+}

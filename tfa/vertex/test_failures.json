@@ -1,0 +1,23 @@
+[
+  {
+    "test_case_id": "TC001",
+    "test_case_name": "test_user_login",
+    "failure_message": "AssertionError: Expected status code 200, but got 401"
+  },
+  {
+    "test_case_id": "TC002",
+    "test_case_name": "test_database_query",
+    "failure_message": "ConnectionError: could not connect to database server"
+  },
+  {
+    "test_case_id": "TC003",
+    "test_case_name": "test_api_endpoint",
+    "failure_message": "TimeoutError: Request timed out after 30 seconds"
+  },
+  {
+    "test_case_id": "TC004",
+    "test_case_name": "test_element_interaction",
+    "failure_message": "NoSuchElementException: Unable to locate element with id 'submit-btn'",
+    "test_code": "submit_button = driver.find_element(By.ID, 'submit-btn')\nsubmit_button.click()"
+  }
+]

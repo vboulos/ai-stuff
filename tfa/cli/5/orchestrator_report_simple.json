@@ -1,0 +1,24 @@
+{
+  "generated_at": "2025-09-09T14:57:36.932245",
+  "total_failures": 2,
+  "test_failures": [
+    {
+      "test_name": "test_user_authentication",
+      "failure_message": "AssertionError: Expected status code 200, but got 401\nResponse: {'error': 'Invalid authentication token'}",
+      "root_cause": "The test is receiving a 401 Unauthorized status code instead of the expected 200 OK, with an error message indicating \"Invalid authentication token\". This suggests the test is either using an invalid/expired authentication token, no token at all, or the authentication mechanism in the test setup is not properly configured.",
+      "suggested_fix": "**\nThe authentication test is failing because it's not properly setting up valid authentication credentials before making the API request. Here's a step-by-",
+      "confidence_score": 0.7,
+      "effort_estimate": "low",
+      "code_example": "**\n```python\nimport pytest\nfrom your_app import create_app, db\nfrom your_app.models import User\nfrom your_app.auth import generate_token"
+    },
+    {
+      "test_name": "test_database_connection",
+      "failure_message": "psycopg2.OperationalError: could not connect to server: Connection refused\nIs the server running on host \"localhost\" (127.0.0.1) and accepting TCP/IP connections on port 5432?",
+      "root_cause": "The PostgreSQL database server is not running or not accessible on the expected host/port combination (localhost:5432). The test is attempting to establish a database connection but receiving a connection refused error, indicating either the PostgreSQL service is stopped, not installed, running on a different port, or blocked by firewall/network configuration.",
+      "suggested_fix": "**\nThis is a database connectivity issue where the test is trying to connect to PostgreSQL but the database server is not running or accessible. The fix involves setting up a proper test database environment and ensuring PostgreSQL is running. Here's the step-by-",
+      "confidence_score": 0.7,
+      "effort_estimate": "medium",
+      "code_example": "**\n```python\n# conftest.py - Test configuration and fixtures\nimport pytest\nimport psycopg2\nfrom psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT\nimport os\nimport time\n\n# Test database configuration\nTEST_DB_CONFIG = {\n    'host': os.getenv('TEST_DB_HOST', 'localhost'),\n    'port': os.getenv('TEST_DB_PORT', '5432'),\n    'user': os.getenv('TEST_DB_USER', 'postgres'),\n    'password': os.getenv('TEST_DB_PASSWORD', ''),\n    'database': os.getenv('TEST_DB_NAME', 'test_database')\n}\n\ndef wait_for_db(config, max_retries=30, delay=1):\n    \"\"\"Wait for database to be available with retry logic.\"\"\"\n    for attempt in range(max_retries):"
+    }
+  ]
+}

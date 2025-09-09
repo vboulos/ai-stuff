@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="194.6320" tests="2" failures="1">
+  <testsuite name="GRC: Test export CSV functionality in GRC pages" timestamp="2025-09-04T02:24:43" tests="2" time="194.6080" failures="1">
+    <testcase name="GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI" time="0.0000" classname="RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI">
+      <failure message="Timed out retrying after 120000ms: expected &lt;dd.pf-v5-c-description-list__description&gt; to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'" type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'
+    at eval (webpack://acmqe-grc-test/./tests/cypress/support/views.js:4742:80)
+    at Array.forEach (<anonymous>)
+    at Context.eval (webpack://acmqe-grc-test/./tests/cypress/support/views.js:4730:26)]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

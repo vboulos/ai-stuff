@@ -1,0 +1,22 @@
+{
+  "failed_tests": [
+    {
+      "test_name": "test_user_authentication",
+      "failure_message": "AssertionError: Expected status code 200, but got 401\n  at test_user_authentication (test_auth.py:45)\n  at authenticate_user('invalid_token')\n  Response: {'error': 'Invalid authentication token'}",
+      "file_path": "tests/test_auth.py",
+      "line_number": 45
+    },
+    {
+      "test_name": "test_database_connection",
+      "failure_message": "psycopg2.OperationalError: could not connect to server: Connection refused\n  Is the server running on host \"localhost\" (127.0.0.1) and accepting TCP/IP connections on port 5432?",
+      "file_path": "tests/test_database.py",
+      "line_number": 23
+    },
+    {
+      "test_name": "test_api_rate_limiting",
+      "failure_message": "TimeoutError: Request timed out after 30 seconds\n  at test_api_rate_limiting (test_api.py:67)\n  Expected: API should respond within rate limit\n  Actual: No response received",
+      "file_path": "tests/test_api.py",
+      "line_number": 67
+    }
+  ]
+}
