@@ -48,7 +48,7 @@ def setupClaudeCli() {
         echo 'export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID' >> ~/.bashrc
         source ~/.bashrc
 
-        microdnf install nodejs-npm
+        dnf install nodejs-npm
 
         mkdir ~/.npm-global
         npm config set prefix '~/.npm-global' 
