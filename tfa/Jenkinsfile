@@ -101,7 +101,7 @@ pipeline {
                 # export npm_config_unsafe_perm=true
                 # npm config get unsafe-perm                    
                 # npm ci
-                echo $PATH
+                # echo $PATH
                 node --version
                 npm --version
                 """
