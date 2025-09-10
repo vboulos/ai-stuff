@@ -39,10 +39,9 @@ def setupClaudeCli() {
     sh """
         
         # Export the variable AND run the command in the same script
-        export GOOGLE_APPLICATION_CREDENTIALS="${$GOOGLE_APPLICATION_CREDENTIALS}"
-        
-        echo "--- Setting the quota project for ADC ---"
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project cloudability-it-gemini
+        export CALUDE_APPLICATION_CREDENTIALS=$CALUDE_APPLICATION_CREDENTIALS
+        mkdir -p ~/.config/gcloud
+        cp $CALUDE_APPLICATION_CREDENTIALS ~/.config/gcloud/application_default_credentials.json
         
         echo "--- Verifying ADC configuration file ---"
         cat ~/.config/gcloud/application_default_credentials.json
@@ -98,6 +97,7 @@ pipeline {
         PATH="${WORKDIR}/bin:${env.PATH}"
         // GCP credentials
         GOOGLE_APPLICATION_CREDENTIALS=credentials('vincent-gcp-sa')
+        CALUDE_APPLICATION_CREDENTIALS=credentials('vincent-claude-app-creds')
         GCP_PROJECT_ID='gc-acm-test'
         ANTHROPIC_VERTEX_PROJECT_ID='itpc-gcp-hcm-pe-eng-claude'
     } 
