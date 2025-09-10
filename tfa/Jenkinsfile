@@ -102,8 +102,8 @@ pipeline {
                 # npm config get unsafe-perm                    
                 # npm ci
                 echo $PATH
-                /usr/bin/node --version
-                /usr/bin/npm --version
+                node --version
+                npm --version
                 """
                 script {
                     setupGCP()
