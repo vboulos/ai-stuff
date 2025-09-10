@@ -67,6 +67,7 @@ def setupClaudeCli() {
         npm install -g @anthropic-ai/claude-code 
 
         # Run claude cli
+        source ~/.bashrc
         claude
         # Check the status
         /status
