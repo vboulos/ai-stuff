@@ -23,7 +23,7 @@ spec:
   - name: tfa-container
     # ubi9 and python
     # image: 'quay.io/vboulos/acmqe-automation/pics:ubi9-python'
-    image: 'quay.io/vboulos/acmqe-automation/pics@sha256:bc6a19a8a3c1ef222c3a58730d1a0acb470683a8bb408b9c8dbb257e91ffc369'
+    image: 'quay.io/vboulos/acmqe-automation/python@sha256:b8530f17e1b7ae02090ba702f04f6b20a0688e464ca18de6d81be69ae28c5137'
     registry: docker.io
     # imagePullSecrets: 'agent-image-secret'
     ttyEnabled: true
