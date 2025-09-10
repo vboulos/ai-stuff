@@ -105,7 +105,7 @@ pipeline {
                 # /usr/local/bin/node --version
                 # /usr/local/bin/npm --version
 
-                sudo apt update
+                apt update
                 apt install -y curl
                 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
                 sudo apt install -y nodejs
