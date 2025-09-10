@@ -67,7 +67,7 @@ def setupClaudeCli() {
         npm install -g @anthropic-ai/claude-code 
 
         # Run claude cli
-        ~/.npm-global/bin/claude
+        ~/.npm-global/bin/claude "what is the latst java version"
         # Check the status
         /status
         # Exit
