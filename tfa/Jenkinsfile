@@ -107,8 +107,8 @@ pipeline {
 
                 apt update
                 apt install -y curl
-                curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-                sudo apt install -y nodejs
+                curl -fsSL https://deb.nodesource.com/setup_lts.x | -E bash -
+                apt install -y nodejs
                 node -v
                 npm -v
                 """
