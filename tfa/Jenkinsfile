@@ -48,16 +48,16 @@ def setupClaudeCli() {
         echo 'export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID' >> ~/.bashrc
         source ~/.bashrc
 
-        dnf install nodejs-npm
+        microdnf install nodejs-npm
 
         mkdir ~/.npm-global
-        npm config set prefix '~/.npm-global' 
+        /usr/bin/npm config set prefix '~/.npm-global' 
         echo 'export PATH=$PATH:$HOME/.npm-global/bin' >> ~/.bashrc
         source ~/.bashrc
 
         # Install Claude Code (If you previously installed Claude Code, you must first uninstall)
         # npm uninstall -g @anthropic-ai/claude-code
-        npm install -g @anthropic-ai/claude-code 
+        /usr/bin/npm install -g @anthropic-ai/claude-code 
 
         # Run claude cli
         claude
@@ -103,8 +103,8 @@ pipeline {
                 # npm ci
                 echo $PATH
                 which node
-                node --version
-                npm --version
+                /usr/bin/node --version
+                /usr/bin/npm --version
                 """
                 script {
                     setupGCP()
