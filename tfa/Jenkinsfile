@@ -37,7 +37,7 @@ def setupGCP() {
 def setupClaudeCli() {
     echo "Setting up Claude CLI"
     sh """
-        gcloud auth application-default set-quota-project cloudability-it-gemini
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project cloudability-it-gemini
 
         export CLAUDE_CODE_USE_VERTEX=1
         export CLOUD_ML_REGION=us-east5
