@@ -80,11 +80,6 @@ pipeline {
             yamlFile 'tfa/JenkinsAgent.yaml'
         }
     }
-    tools {
-        // This name must match the one configured in Jenkins > Tools
-        nodejs 'NodeJS-20' 
-    }
-
     parameters {
         string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'The GIT branch to checkout')
     }
