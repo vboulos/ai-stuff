@@ -51,13 +51,13 @@ def setupClaudeCli() {
         microdnf install nodejs-npm
 
         mkdir ~/.npm-global
-        /usr/bin/npm config set prefix '~/.npm-global' 
+        npm config set prefix '~/.npm-global' 
         echo 'export PATH=$PATH:$HOME/.npm-global/bin' >> ~/.bashrc
         source ~/.bashrc
 
         # Install Claude Code (If you previously installed Claude Code, you must first uninstall)
         # npm uninstall -g @anthropic-ai/claude-code
-        /usr/bin/npm install -g @anthropic-ai/claude-code 
+        npm install -g @anthropic-ai/claude-code 
 
         # Run claude cli
         claude
@@ -102,8 +102,8 @@ pipeline {
                 # npm config get unsafe-perm                    
                 # npm ci
                 echo $PATH
-                /usr/bin/node --version
-                /usr/bin/npm --version
+                node --version
+                npm --version
                 """
                 script {
                     setupGCP()
