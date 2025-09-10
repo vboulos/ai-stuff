@@ -104,7 +104,6 @@ pipeline {
                 echo $PATH
                 node --version
                 npm --version
-                npm install
                 """
                 script {
                     setupGCP()
