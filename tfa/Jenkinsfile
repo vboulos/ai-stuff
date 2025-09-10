@@ -102,7 +102,6 @@ pipeline {
                 # npm config get unsafe-perm                    
                 # npm ci
                 echo $PATH
-                which node
                 /usr/bin/node --version
                 /usr/bin/npm --version
                 """
