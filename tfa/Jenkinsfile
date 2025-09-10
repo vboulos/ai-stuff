@@ -80,6 +80,11 @@ pipeline {
             yamlFile 'tfa/JenkinsAgent.yaml'
         }
     }
+    tools {
+        // This name must match the one configured in Jenkins > Tools
+        nodejs 'NodeJS-20' 
+    }
+
     parameters {
         string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'The GIT branch to checkout')
     }
@@ -101,7 +106,8 @@ pipeline {
                 # export npm_config_unsafe_perm=true
                 # npm config get unsafe-perm                    
                 # npm ci
-                # echo $PATH
+                echo $PATH
+                which node
                 node --version
                 npm --version
                 """
