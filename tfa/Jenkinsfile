@@ -48,7 +48,7 @@ def setupClaudeCli() {
         echo 'export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID' >> ~/.bashrc
         source ~/.bashrc
 
-        dnf install nodejs-npm
+        # dnf install nodejs-npm
 
         mkdir ~/.npm-global
         npm config set prefix '~/.npm-global' 
@@ -101,9 +101,16 @@ pipeline {
                 # export npm_config_unsafe_perm=true
                 # npm config get unsafe-perm                    
                 # npm ci
-                echo $PATH
-                /usr/local/bin/node --version
-                /usr/local/bin/npm --version
+                # echo $PATH
+                # /usr/local/bin/node --version
+                # /usr/local/bin/npm --version
+
+                sudo apt update
+                apt install -y curl
+                curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+                sudo apt install -y nodejs
+                node -v
+                npm -v
                 """
                 script {
                     setupGCP()
