@@ -37,8 +37,15 @@ def setupGCP() {
 def setupClaudeCli() {
     echo "Setting up Claude CLI"
     sh """
-        export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
+        
+        # Export the variable AND run the command in the same script
+        export GOOGLE_APPLICATION_CREDENTIALS="${$GOOGLE_APPLICATION_CREDENTIALS}"
+        
+        echo "--- Setting the quota project for ADC ---"
         $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project cloudability-it-gemini
+        
+        echo "--- Verifying ADC configuration file ---"
+        cat ~/.config/gcloud/application_default_credentials.json
 
         export CLAUDE_CODE_USE_VERTEX=1
         export CLOUD_ML_REGION=us-east5
