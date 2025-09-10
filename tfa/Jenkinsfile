@@ -104,13 +104,6 @@ pipeline {
                 # echo $PATH
                 # /usr/local/bin/node --version
                 # /usr/local/bin/npm --version
-
-                apt update
-                apt install -y curl
-                curl -fsSL https://deb.nodesource.com/setup_lts.x | -E bash -
-                apt install -y nodejs
-                node -v
-                npm -v
                 """
                 script {
                     setupGCP()
