@@ -96,12 +96,16 @@ pipeline {
     stages {
         stage('Build') {
             steps {                
-                sh '''  
+                sh """  
                 rm -rf results     
-                export npm_config_unsafe_perm=true
-                npm config get unsafe-perm                    
-                npm ci
-                '''
+                # export npm_config_unsafe_perm=true
+                # npm config get unsafe-perm                    
+                # npm ci
+                echo $PATH
+                node --version
+                npm --version
+                npm install
+                """
                 script {
                     setupGCP()
                     setupClaudeCli()
