@@ -79,6 +79,9 @@ def setupClaudeCli() {
         # $WORKDIR/bin/google-cloud-sdk/bin/gcloud config set project $ANTHROPIC_VERTEX_PROJECT_ID
         $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth list
 
+        # list of projects
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects list --format="json"
+
         # Run claude cli
         ~/.npm-global/bin/claude "what is the latest java version"
         # Check the status
