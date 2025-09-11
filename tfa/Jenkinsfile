@@ -85,11 +85,11 @@ def setupClaudeCli() {
         
 
         # Run claude cli
-        ~/.npm-global/bin/claude "what is the latest java version"
+        # ~/.npm-global/bin/claude "what is the latest java version"
         # Check the status
-        /status
+        # /status
         # Exit
-        exit
+        # exit
 
     """
 }
@@ -139,51 +139,28 @@ pipeline {
                 }
             }
         }
-        // stage('TFA') {
-        //     steps {
-        //         catchError(stageResult: 'UNSTABLE',  buildResult: null) { 
-        //         sh """
-        //             export OPTIONS_HUB_USER=${params.OCP_HUB_CLUSTER_USER}
-        //             export OPTIONS_HUB_PASSWORD=${params.OCP_HUB_CLUSTER_PASSWORD}
-        //             export OPTIONS_HUB_BASEDOMAIN=${params.OCP_HUB_CLUSTER_API_URL}
-        //             export ACM_NAMESPACE=${params.ACM_NAMESPACE}
-        //             export BROWSER=${params.BROWSER}
-        //             export SKIP_API_TEST=${params.SKIP_API_TEST}
-        //             export SKIP_UI_TEST=${params.SKIP_UI_TEST}
-                   
-        //             # # oc cluster login
-        //             # oc login --insecure-skip-tls-verify -u \$OCP_HUB_CLUSTER_USER -p \$OCP_HUB_CLUSTER_PASSWORD \$OCP_HUB_CLUSTER_API_URL
-        //             # echo "1- #### export OPTIONS_HUB_BASEDOMAIN"
-        //             # export OPTIONS_HUB_BASEDOMAIN=\$(oc get ingress.config.openshift.io/cluster -ojson | jq -r '.spec.domain')
-        //             # echo \$OPTIONS_HUB_BASEDOMAIN
-                   
-        //            if [[ -z "${params.OCP_HUB_CLUSTER_USER}" || -z "${params.OCP_HUB_CLUSTER_PASSWORD}" || -z "${params.OCP_HUB_CLUSTER_API_URL}" ]]; then
-        //                 echo "Aborting test.. OCP/ACM connection details are required for the test execution"
-        //                 exit 1
-        //             else   
-        //                 # npm install
-        //                 if [[ \$SKIP_UI_TEST == false && \$SKIP_API_TEST == false ]]; then
-        //                     echo "# Both UI and API tests are enabled"
-        //                     npm run test
-        //                 elif [[ \$SKIP_UI_TEST == true && \$SKIP_API_TEST == false ]]; then
-        //                     echo "# UI tests skipped, API tests are enabled"
-        //                     SKIP_UI_TEST=true npm run test
-        //                 elif [[ \$SKIP_UI_TEST == false && \$SKIP_API_TEST == true ]]; then
-        //                     echo "# UI tests are enabled, API tests are skipped"
-        //                     SKIP_API_TEST=true npm run test
-        //                 else
-        //                     echo "Both UI and API tests are set to be skipped. No test command will be executed."
-        //                 fi
-        //             fi
-        //         """
-        //         }
-        //     }
-        // }
-    }
-    post {
-        always {
-            archiveArtifacts artifacts: 'results/*', followSymlinks: false
-            junit 'results/*.xml'
+        stage('TFA') {
+            steps {
+                catchError(stageResult: 'UNSTABLE',  buildResult: null) { 
+                sh """
+                    echo "----- Execution phase -----"
+                    cd tfa/claude/analyze_and_fix
+                    mkdir -p tests_analysis
+
+                    # convert the grc junit.xml files into a single json file that has the failed test cases only
+                    python3 junit_xml_to_json.py junit_xml_files/* --output tests_analysis/grc_failed_tests.json --simple
+
+                    # Analyze the failures in the generated json file, provide fix suggestions and generate them into a final json file that is ready for processing 
+                    python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --output tests_analysis/analysis_and_fixes.json
+                """
+                }
+            }
         }
     }
+    // post {
+    //     always {
+    //         archiveArtifacts artifacts: 'results/*', followSymlinks: false
+    //         junit 'results/*.xml'
+    //     }
+    // }
 }
