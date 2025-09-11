@@ -66,14 +66,15 @@ def setupClaudeCli() {
         # npm uninstall -g @anthropic-ai/claude-code
         npm install -g @anthropic-ai/claude-code 
 
-        # $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding itpc-gcp-hcm-pe-eng-claude \
+        # $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding $ANTHROPIC_VERTEX_PROJECT_ID \
         #    --member="serviceAccount:vboulos@redhat.com" \
         #    --role="roles/aiplatform.user"
         
-        #"$WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding itpc-gcp-hcm-pe-eng-claude \
+        #"$WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding $ANTHROPIC_VERTEX_PROJECT_ID \
         #    --member="user:vboulos@redhat.com" \
         #    --role="roles/aiplatform.user
         
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud config set project $ANTHROPIC_VERTEX_PROJECT_ID
         $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth list
 
         # Run claude cli
