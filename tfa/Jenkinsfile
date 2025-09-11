@@ -25,8 +25,8 @@ def setupGCP() {
         fi
 
         # Authenticate with service account
-        gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-        gcloud config set project $GCP_PROJECT_ID
+        # gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+        # gcloud config set project $GCP_PROJECT_ID
         
         # Verify authentication
         # gcloud auth list
@@ -74,7 +74,9 @@ def setupClaudeCli() {
         #    --member="user:vboulos@redhat.com" \
         #    --role="roles/aiplatform.user
         
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud config set project $ANTHROPIC_VERTEX_PROJECT_ID
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file=$CLAUDE_APPLICATION_CREDENTIALS
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project cloudability-it-gemini
+        # $WORKDIR/bin/google-cloud-sdk/bin/gcloud config set project $ANTHROPIC_VERTEX_PROJECT_ID
         $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth list
 
         # Run claude cli
