@@ -145,7 +145,8 @@ pipeline {
                 sh """
                     echo "----- Execution phase -----"
                     cd tfa/claude/analyze_and_fix
-                    mkdir -p tests_analysis
+                    mkdir -p tests_analysis .
+                    ls
 
                     # convert the grc junit.xml files into a single json file that has the failed test cases only
                     python3 junit_xml_to_json.py junit_xml_files/* --output tests_analysis/grc_failed_tests.json --simple
