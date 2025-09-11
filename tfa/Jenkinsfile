@@ -75,7 +75,7 @@ def setupClaudeCli() {
         #    --role="roles/aiplatform.user
 
         # list of projects
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects list --format="json"
+        # $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects list --format="json"
         
         $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file=$JENKINS_APPLICATION_CREDENTIALS
         $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project cloudability-it-gemini
