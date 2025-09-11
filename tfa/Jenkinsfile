@@ -158,10 +158,9 @@ pipeline {
             }
         }
     }
-    // post {
-    //     always {
-    //         archiveArtifacts artifacts: 'results/*', followSymlinks: false
-    //         junit 'results/*.xml'
-    //     }
-    // }
+    post {
+        always {
+            archiveArtifacts artifacts: 'tests_analysis/*', followSymlinks: false
+        }
+    }
 }
