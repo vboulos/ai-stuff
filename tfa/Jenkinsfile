@@ -40,7 +40,7 @@ def setupClaudeCli() {
         
         # Export the variable AND run the command in the same script
         # export JENKINS_APPLICATION_CREDENTIALS=$JENKINS_APPLICATION_CREDENTIALS
-        export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIAL
+        export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
         export CLAUDE_APPLICATION_CREDENTIALS=$CLAUDE_APPLICATION_CREDENTIALS
         mkdir -p ~/.config/gcloud
         cp $CLAUDE_APPLICATION_CREDENTIALS ~/.config/gcloud/application_default_credentials.json
