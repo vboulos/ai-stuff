@@ -160,7 +160,7 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'tests_analysis/*', followSymlinks: false
+            archiveArtifacts artifacts: 'tfa/claude/analyze_and_fix/tests_analysis/*', followSymlinks: false
         }
     }
 }
