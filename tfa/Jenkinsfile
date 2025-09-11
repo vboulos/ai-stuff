@@ -39,9 +39,11 @@ def setupClaudeCli() {
     sh """
         
         # Export the variable AND run the command in the same script
-        export CALUDE_APPLICATION_CREDENTIALS=$CALUDE_APPLICATION_CREDENTIALS
+        # export JENKINS_APPLICATION_CREDENTIALS=$JENKINS_APPLICATION_CREDENTIALS
+        export GOOGLE_APPLICATION_CREDENTIALS=$JENKINS_APPLICATION_CREDENTIALS
+        export CLAUDE_APPLICATION_CREDENTIALS=$CLAUDE_APPLICATION_CREDENTIALS
         mkdir -p ~/.config/gcloud
-        cp $CALUDE_APPLICATION_CREDENTIALS ~/.config/gcloud/application_default_credentials.json
+        cp $CLAUDE_APPLICATION_CREDENTIALS ~/.config/gcloud/application_default_credentials.json
         
         echo "--- Verifying ADC configuration file ---"
         # cat ~/.config/gcloud/application_default_credentials.json
@@ -68,9 +70,9 @@ def setupClaudeCli() {
         #    --member="serviceAccount:vboulos@redhat.com" \
         #    --role="roles/aiplatform.user"
         
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding itpc-gcp-hcm-pe-eng-claude \
-            --member="user:vboulos@redhat.com" \
-            --role="roles/aiplatform.user"
+        #"$WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding itpc-gcp-hcm-pe-eng-claude \
+        #    --member="user:vboulos@redhat.com" \
+        #    --role="roles/aiplatform.user
         
         $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth list
 
@@ -105,9 +107,11 @@ pipeline {
         PATH="${WORKDIR}/bin:${env.PATH}"
         // GCP credentials
         GOOGLE_APPLICATION_CREDENTIALS=credentials('vincent-gcp-sa')
-        CALUDE_APPLICATION_CREDENTIALS=credentials('vincent-claude-app-creds')
+        CLAUDE_APPLICATION_CREDENTIALS=credentials('vincent-claude-app-creds')
+        JENKINS_APPLICATION_CREDENTIALS=credentials('jenkins-pics-gcp-sa')
         GCP_PROJECT_ID='gc-acm-test'
         ANTHROPIC_VERTEX_PROJECT_ID='itpc-gcp-hcm-pe-eng-claude'
+        
     } 
     stages {
         stage('Build') {
