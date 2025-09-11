@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="18.2690" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2025-09-04T03:14:37" tests="0" file="tests/cypress/tests/e2e/template_lookup_integers_policy.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="RHACM4K-4165: GRC: Test allowing parsing Strings to Boolean and Integers in Policy Templates" timestamp="2025-09-04T03:14:37" tests="1" time="18.2430" failures="0">
+    <testcase name="RHACM4K-4165: GRC: Test allowing parsing Strings to Boolean and Integers in Policy Templates Test allowing parsing Strings to Boolean and Integers in Policy Templates" time="18.4070" classname="Test allowing parsing Strings to Boolean and Integers in Policy Templates">
+    </testcase>
+  </testsuite>
+</testsuites>

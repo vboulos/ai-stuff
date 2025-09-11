@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="65.5460" tests="1" failures="1">
+  <testsuite name="Root Suite" timestamp="2025-09-04T02:20:01" tests="0" file="tests/cypress/tests/e2e/discovered_by_cluster_configuration_ui.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="GRC: Donut chart for configuration policy in discovered policies - ACM-13337 " timestamp="2025-09-04T02:20:01" tests="1" time="65.5130" failures="1">
+    <testcase name="GRC: Donut chart for configuration policy in discovered policies - ACM-13337  &quot;before all&quot; hook for &quot;RHACM4K-52432: GRC: UI: Donut Card for Configuration policy in DiscoveredByCluster page &quot;" time="0.0000" classname="&quot;before all&quot; hook for &quot;RHACM4K-52432: GRC: UI: Donut Card for Configuration policy in DiscoveredByCluster page &quot;">
+      <failure message="Timed out retrying
+
+Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Donut chart for config...`" type="Error"><![CDATA[Error: Timed out retrying
+
+Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Donut chart for config...`
+    at Context.check (webpack://acmqe-grc-test/./node_modules/cypress-wait-until/src/index.js:62:0)
+    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)
+    at Promise.attempt.Promise.try (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:4285:29)
+    at Context.thenFn (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118360:66)
+    at Context.then (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118611:21)
+    at wrapped (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:138862:19)
+    at <unknown> (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:144789:15)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>
