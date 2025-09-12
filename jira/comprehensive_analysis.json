@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "generated_at": "2025-09-10T10:46:35.497357",
+    "input_file": "grc_failed_tests.json",
+    "processing_mode": "analysis_and_fixes",
+    "total_tests_in_input": 1,
+    "failed_tests_found": 1,
+    "tests_processed": 1,
+    "claude_timeout": 12,
+    "max_workers": 3
+  },
+  "statistics": {
+    "processing_time_seconds": 446.97,
+    "total_processed": 1,
+    "successful_analyses": 1,
+    "failed_analyses": 0,
+    "analysis_success_rate": 0.6,
+    "successful_fixes": 0,
+    "failed_fixes": 1,
+    "fix_success_rate": 0.0,
+    "fix_summary": {
+      "total_fixes": 1,
+      "successful_fixes": 0,
+      "failed_fixes": 1,
+      "success_rate": 0.0,
+      "fix_type_distribution": {},
+      "priority_distribution": {},
+      "effort_distribution": {}
+    },
+    "average_confidence": 0.76
+  },
+  "test_results": [
+    {
+      "test_name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+        "status": "failed",
+        "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'",
+        "framework": "junit",
+        "class_name": "RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Test export CSV functionality in GRC pages"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test is failing due to a missing space after \"acm-dr-virt-config-file-name.\" in the policy description text. The expected text has a space before \"Creates\" but the actual text shows \"acm-dr-virt-config-file-name.Creates\" (no space between the period and \"Creates\").",
+        "suggested_fix": "Fix the text formatting in the policy description to include the missing space. This could be either in the source data that generates this description or in the UI template that renders it.",
+        "code_example": "```javascript\n// In the policy description template or data source:\n// Change from:\n'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...'\n\n// To:\n'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule...'\n//                                                                              ^ Add space here\n```\n\nOr update the test expectation if the current format is intentional:\n```javascript\n// Update test assertion to match actual format:\n.should('contain.text', 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...')\n```",
+        "confidence_score": 0.95,
+        "error_category": "assertion",
+        "severity": "low",
+        "raw_response": "**ROOT CAUSE:**\nThe test is failing due to a missing space after \"acm-dr-virt-config-file-name.\" in the policy description text. The expected text has a space before \"Creates\" but the actual text shows \"acm-dr-virt-config-file-name.Creates\" (no space between the period and \"Creates\").\n\n**SUGGESTED FIX:**\nFix the text formatting in the policy description to include the missing space. This could be either in the source data that generates this description or in the UI template that renders it.\n\n**CODE EXAMPLE:**\n```javascript\n// In the policy description template or data source:\n// Change from:\n'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...'\n\n// To:\n'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule...'\n//                                                                              ^ Add space here\n```\n\nOr update the test expectation if the current format is intentional:\n```javascript\n// Update test assertion to match actual format:\n.should('contain.text', 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...')\n```\n\n**CONFIDENCE:**\n0.95\n\n**ERROR_CATEGORY:**\nassertion\n\n**SEVERITY:**\nlow",
+        "analyzed_at": "2025-09-10T10:39:22.604957"
+      },
+      "fix_suggestion": {
+        "success": false,
+        "error": "Claude CLI timeout after 120 seconds",
+        "suggested_at": "2025-09-10T10:43:14.519190"
+      }
+    }
+  ]
+}

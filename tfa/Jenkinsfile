@@ -37,7 +37,6 @@ def setupGCP() {
 def setupClaudeCli() {
     echo "Setting up Claude CLI"
     sh """
-        
         # Export the variable AND run the command in the same script
         # export JENKINS_APPLICATION_CREDENTIALS=$JENKINS_APPLICATION_CREDENTIALS
         export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
