@@ -18,17 +18,17 @@ class JIRATicketManager:
     Creates new tickets or updates existing ones with analysis and fix suggestions.
     """
     
-    def __init__(self, jira_url: str, username: str, api_token: str, project_key: str,
-                 default_issue_type: str = 'Bug', default_labels: List[str] = None,
-                 default_components: List[str] = None, default_fix_version: str = None,
-                 custom_fields: Dict[str, Any] = None):
+    def __init__(self, jira_url: str, username: str = None, api_token: str = None, 
+                 project_key: str = None, default_issue_type: str = 'Bug', 
+                 default_labels: List[str] = None, default_components: List[str] = None, 
+                 default_fix_version: str = None, custom_fields: Dict[str, Any] = None):
         """
         Initialize JIRA connection.
         
         Args:
             jira_url: JIRA server URL
-            username: JIRA username/email
-            api_token: JIRA API token
+            username: JIRA username/email (optional for token auth)
+            api_token: JIRA API token or Personal Access Token
             project_key: JIRA project key (e.g., 'TEST', 'BUG')
             default_issue_type: Default issue type for new tickets (default: 'Bug')
             default_labels: Default labels to apply to all tickets
@@ -46,17 +46,18 @@ class JIRATicketManager:
         self.custom_fields = custom_fields or {}
         
         try:
+            # Personal Access Token authentication
             self.jira = JIRA(
                 server=jira_url,
-                basic_auth=(username, api_token)
+                token_auth=api_token
             )
-            print(f"✅ Connected to JIRA: {jira_url}")
+            print(f"✅ Connected to JIRA using Personal Access Token: {jira_url}")
         except Exception as e:
             raise Exception(f"Failed to connect to JIRA: {e}")
     
     def find_existing_ticket(self, test_name: str, framework: str = None) -> Optional[str]:
         """
-        Find existing JIRA ticket for a test case.
+        Find existing JIRA ticket for a test case by searching for test name in summary.
         
         Args:
             test_name: Name of the test case
@@ -66,35 +67,73 @@ class JIRATicketManager:
             JIRA ticket key if found, None otherwise
         """
         try:
-            # Clean test name for search
-            clean_test_name = self._clean_test_name(test_name)
+            # Search for tickets with "Test Failure:" prefix and our test name
+            # Use broader search terms to catch truncated summaries
             
-            # Search queries to try
-            search_queries = [
-                f'project = {self.project_key} AND summary ~ "{clean_test_name}"',
-                f'project = {self.project_key} AND summary ~ "{test_name[:50]}"',  # First 50 chars
-                f'project = {self.project_key} AND text ~ "{clean_test_name}"'
-            ]
+            # Extract key identifying parts of the test name
+            key_parts = self._extract_key_test_identifiers(test_name)
             
-            if framework:
-                search_queries.append(
-                    f'project = {self.project_key} AND summary ~ "{clean_test_name}" AND summary ~ "{framework}"'
-                )
+            # Build search queries with different strategies
+            search_queries = []
+            
+            # Strategy 1: Search for tickets starting with "Test Failure:"
+            search_queries.append(f'project = {self.project_key} AND summary ~ "Test Failure:"')
+            
+            # Strategy 2: Search for specific key parts if we have them
+            for key_part in key_parts:
+                if len(key_part) > 5:  # Only use meaningful parts
+                    escaped_part = key_part.replace('"', '\\"')
+                    search_queries.append(f'project = {self.project_key} AND summary ~ "{escaped_part}"')
+            
+            # Strategy 3: Search by the first few words of the test name (more specific)
+            # For "GRC: Test export CSV functionality..." search for "GRC Test export"
+            test_words = test_name.split()[:4]  # Take first 4 words
+            if len(test_words) >= 3:
+                search_phrase = ' '.join(test_words)
+                escaped_phrase = search_phrase.replace('"', '\\"')
+                search_queries.append(f'project = {self.project_key} AND summary ~ "{escaped_phrase}"')
             
             for query in search_queries:
                 try:
-                    issues = self.jira.search_issues(query, maxResults=10)
+                    print(f"🔍 Searching with query: {query}")
+                    issues = self.jira.search_issues(query, maxResults=20)
                     
+                    # Collect matching tickets
+                    matching_tickets = []
                     for issue in issues:
-                        # Check if this is likely the same test
-                        if self._is_same_test(test_name, issue.fields.summary, issue.fields.description):
-                            print(f"🔍 Found existing ticket: {issue.key} - {issue.fields.summary}")
-                            return issue.key
+                        # Debug: Show what we're comparing with status
+                        status = getattr(issue.fields, 'status', None)
+                        status_name = status.name if status else 'Unknown'
+                        print(f"    Comparing with: {issue.key} - {issue.fields.summary} (Status: {status_name})")
+                        
+                        # Check if this matches our test
+                        if self._is_same_test_ticket(test_name, issue.fields.summary, issue.fields.description):
+                            matching_tickets.append((issue, status_name))
+                            print(f"    ✓ Potential match: {issue.key} (Status: {status_name})")
+                    
+                    # If we found matches, prefer open tickets over closed ones
+                    if matching_tickets:
+                        # Define closed statuses
+                        closed_statuses = {"Closed", "Done", "Resolved", "Fixed", "Cancelled", "Rejected", "Complete"}
+                        
+                        # First, try to find an open ticket
+                        for issue, status_name in matching_tickets:
+                            if status_name not in closed_statuses:
+                                print(f"✅ Found existing open ticket: {issue.key} - {issue.fields.summary} (Status: {status_name})")
+                                return issue.key
+                        
+                        # If no open ticket found, use the first closed one (but warn about it)
+                        issue, status_name = matching_tickets[0]
+                        print(f"⚠️  Found matching ticket but it's closed: {issue.key} - {issue.fields.summary} (Status: {status_name})")
+                        print(f"    Will create a new ticket instead of updating closed one.")
+                        # Don't return the closed ticket - let it create a new one
+                        continue
                             
                 except JIRAError as e:
                     print(f"⚠️  Search query failed: {query} - {e}")
                     continue
             
+            print(f"📋 No existing ticket found for test: {test_name[:50]}...")
             return None
             
         except Exception as e:
@@ -114,7 +153,7 @@ class JIRATicketManager:
             test_case_data: Test case data with analysis and fix suggestions
             custom_labels: Additional labels for this specific ticket
             custom_components: Additional components for this specific ticket
-            custom_fix_version: Fix version for this specific ticket
+            custom_fix_version: Fix version for this specific ticket1
             custom_fields: Additional custom fields for this specific ticket
             issue_type: Issue type for this specific ticket
             
@@ -136,7 +175,7 @@ class JIRATicketManager:
                 test_case_data, is_new_ticket=True
             )
             
-            # Determine priority based on analysis
+            # Determine priority based on analysis (validate it exists)
             priority = self._determine_priority(analysis)
             
             # Create issue
@@ -144,59 +183,107 @@ class JIRATicketManager:
                 'project': {'key': self.project_key},
                 'summary': summary,
                 'description': description,
-                'issuetype': {'name': issue_type or self.default_issue_type},
-                'priority': {'name': priority}
+                'issuetype': {'name': issue_type or self.default_issue_type}
             }
             
-            # Build labels (combine defaults, auto-generated, and custom)
-            labels = self.default_labels.copy()
-            labels.extend(['test-failure', f'framework-{framework.lower()}'])
+            # Add priority only if it's valid
+            # try:
+            #     valid_priorities = [p.name for p in self.jira.priorities()]
+            #     if priority in valid_priorities:
+            #         issue_dict['priority'] = {'name': priority}
+            #     else:
+            #         print(f"⚠️  Invalid priority '{priority}', using default")
+            # except:
+            #     print(f"⚠️  Could not validate priority, skipping")
             
-            # Add analysis-based labels
+            # Build labels only if any are defined
+            labels = []
+            
+            # Add default labels if defined
+            if self.default_labels:
+                labels.extend(self.default_labels)
+            
+            # Add analysis-based labels if defined
             if analysis.get("error_category"):
                 labels.append(f'category-{analysis["error_category"]}')
             if analysis.get("severity"):
                 labels.append(f'severity-{analysis["severity"]}')
             
-            # Add custom labels
+            # Add framework label
+            if framework and framework.lower() != 'unknown':
+                labels.append(f'framework-{framework.lower()}')
+            
+            # Add custom labels if provided
             if custom_labels:
                 labels.extend(custom_labels)
             
-            # Remove duplicates and set labels
-            issue_dict['labels'] = list(set(labels))
+            # Only add labels if we have any
+            if labels:
+                issue_dict['labels'] = list(set(labels))
             
-            # Build components
+            # Build components only if any are defined
             components = []
             
-            # Add default components
-            for comp_name in self.default_components:
-                components.append({'name': comp_name})
+            # Only validate components if we might need them
+            valid_components = []
+            if self.default_components or custom_components or original_test.get("suite_name"):
+                try:
+                    valid_components = [comp.name for comp in self.jira.project_components(self.project_key)]
+                except:
+                    valid_components = []
             
-            # Add suite-based component
-            if original_test.get("suite_name"):
-                components.append({'name': original_test['suite_name']})
+            # Add default components only if defined
+            if self.default_components:
+                for comp_name in self.default_components:
+                    if not valid_components or comp_name in valid_components:
+                        components.append({'name': comp_name})
+                    else:
+                        print(f"⚠️  Skipping invalid default component: {comp_name}")
             
-            # Add custom components
+            # Add custom components only if provided
             if custom_components:
                 for comp_name in custom_components:
-                    components.append({'name': comp_name})
+                    if not valid_components or comp_name in valid_components:
+                        components.append({'name': comp_name})
+                    else:
+                        print(f"⚠️  Skipping invalid custom component: {comp_name}")
             
-            if components:
-                issue_dict['components'] = components
+            # Remove duplicates
+            unique_components = []
+            seen_names = set()
+            for comp in components:
+                if comp['name'] not in seen_names:
+                    unique_components.append(comp)
+                    seen_names.add(comp['name'])
             
-            # Add fix version
+            # Only add components if we have any
+            if unique_components:
+                issue_dict['components'] = unique_components
+            
+            # Add fix version only if specified
             fix_version = custom_fix_version or self.default_fix_version
             if fix_version:
-                issue_dict['fixVersions'] = [{'name': fix_version}]
+                try:
+                    project_versions = [v.name for v in self.jira.project_versions(self.project_key)]
+                    if fix_version in project_versions:
+                        issue_dict['fixVersions'] = [{'name': fix_version}]
+                    else:
+                        print(f"⚠️  Invalid fix version '{fix_version}', skipping")
+                        print(f"Available versions: {project_versions[:5]}...")  # Show first 5
+                except:
+                    print(f"⚠️  Could not validate fix version, skipping")
             
-            # Add custom fields
-            all_custom_fields = self.custom_fields.copy()
+            # Add custom fields only if any are defined
+            all_custom_fields = {}
+            if self.custom_fields:
+                all_custom_fields.update(self.custom_fields)
             if custom_fields:
                 all_custom_fields.update(custom_fields)
             
-            # Apply custom fields to issue_dict
-            for field_name, field_value in all_custom_fields.items():
-                issue_dict[field_name] = field_value
+            # Apply custom fields to issue_dict only if we have any
+            if all_custom_fields:
+                for field_name, field_value in all_custom_fields.items():
+                    issue_dict[field_name] = field_value
             
             new_issue = self.jira.create_issue(fields=issue_dict)
             
@@ -205,6 +292,9 @@ class JIRATicketManager:
             
         except JIRAError as e:
             print(f"❌ Failed to create JIRA ticket: {e}")
+            print(f"🔍 Request payload: {issue_dict}")
+            if hasattr(e, 'response') and e.response:
+                print(f"🔍 Response content: {e.response.text}")
             return None
         except Exception as e:
             print(f"❌ Error creating ticket: {e}")
@@ -259,9 +349,12 @@ class JIRATicketManager:
                         current_components.append(comp_name)
                 update_fields['components'] = [{'name': name} for name in current_components]
             
-            # Update fix version if provided
+            # Update fix version if provided (append to existing)
             if update_fix_version:
-                update_fields['fixVersions'] = [{'name': update_fix_version}]
+                current_fix_versions = [ver.name for ver in (issue.fields.fixVersions or [])]
+                if update_fix_version not in current_fix_versions:
+                    current_fix_versions.append(update_fix_version)
+                update_fields['fixVersions'] = [{'name': name} for name in current_fix_versions]
             
             # Update custom fields if provided
             if update_custom_fields:
@@ -286,48 +379,173 @@ class JIRATicketManager:
             print(f"❌ Error updating ticket {ticket_key}: {e}")
             return False
     
-    def _clean_test_name(self, test_name: str) -> str:
-        """Clean test name for searching."""
-        # Remove special characters and extra spaces
-        cleaned = re.sub(r'[^\w\s-]', ' ', test_name)
-        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-        return cleaned[:100]  # Limit length
-    
-    def _is_same_test(self, test_name: str, summary: str, description: str) -> bool:
+    def _extract_key_test_identifiers(self, test_name: str) -> List[str]:
         """
-        Determine if a JIRA issue is for the same test case.
+        Extract key identifying parts from a test name.
+        
+        Args:
+            test_name: Full test name
+            
+        Returns:
+            List of key identifying strings
+        """
+        identifiers = []
+        
+        # Look for patterns like RHACM4K-52041, JIRA-123, etc.
+        jira_pattern = re.findall(r'[A-Z]+-\d+', test_name)
+        identifiers.extend(jira_pattern)
+        
+        # Extract meaningful words (longer than 3 chars, not common words)
+        words = re.findall(r'\b\w{4,}\b', test_name)
+        common_words = {'test', 'Test', 'functionality', 'pages', 'from', 'with', 'that', 'this'}
+        meaningful_words = [w for w in words if w not in common_words]
+        identifiers.extend(meaningful_words[:3])  # Take first 3 meaningful words
+        
+        return identifiers
+    
+    def _is_same_test_ticket(self, test_name: str, summary: str, description: str = None) -> bool:
+        """
+        Check if a JIRA ticket is for the same test, handling truncated summaries.
         
         Args:
             test_name: Original test name
             summary: JIRA issue summary
-            description: JIRA issue description
+            description: JIRA issue description (optional)
             
         Returns:
-            True if likely the same test, False otherwise
+            True if this is likely the same test
         """
-        # Simple heuristic - check if test name appears in summary or description
-        test_name_clean = self._clean_test_name(test_name.lower())
-        summary_clean = summary.lower() if summary else ""
-        description_clean = description.lower() if description else ""
+        if not summary:
+            return False
         
-        # Check for significant overlap
-        test_words = set(test_name_clean.split())
-        summary_words = set(summary_clean.split())
-        description_words = set(description_clean.split())
+        # Remove "Test Failure: " prefix if present
+        summary_clean = summary
+        if summary_clean.startswith("Test Failure: "):
+            summary_clean = summary_clean[14:]  # Remove "Test Failure: "
         
-        # If test name is in summary or description, likely the same
-        if test_name_clean in summary_clean or test_name_clean in description_clean:
+        print(f"      🔍 Comparing:")
+        print(f"         Test: {test_name}")
+        print(f"         Summary: {summary_clean}")
+        
+        # Check for exact match first
+        if test_name == summary_clean:
+            print(f"         ✅ Exact match!")
             return True
         
-        # Check word overlap
-        all_issue_words = summary_words.union(description_words)
-        overlap = len(test_words.intersection(all_issue_words))
+        # Handle truncated summaries (ending with "...")
+        if summary_clean.endswith("..."):
+            summary_truncated = summary_clean[:-3]
+            print(f"         📏 Truncated summary: {summary_truncated}")
+            # Check if test name starts with the truncated summary
+            if test_name.startswith(summary_truncated) and len(summary_truncated) > 20:
+                print(f"         ✅ Truncated match!")
+                return True
         
-        # If significant word overlap (>50% of test name words), consider it the same
-        if len(test_words) > 0 and overlap / len(test_words) > 0.5:
+        # Check if summary is truncated version of our test name (no ... at end)
+        if len(summary_clean) < len(test_name) and test_name.startswith(summary_clean) and len(summary_clean) > 20:
+            print(f"         ✅ Summary is truncated version of test!")
             return True
         
+        # Extract key identifiers and see if they match
+        test_identifiers = self._extract_key_test_identifiers(test_name)
+        summary_identifiers = self._extract_key_test_identifiers(summary_clean)
+        
+        print(f"         🔑 Test identifiers: {test_identifiers}")
+        print(f"         🔑 Summary identifiers: {summary_identifiers}")
+        
+        # If we have JIRA ticket numbers, they should match
+        test_jira_ids = [id for id in test_identifiers if re.match(r'[A-Z]+-\d+', id)]
+        summary_jira_ids = [id for id in summary_identifiers if re.match(r'[A-Z]+-\d+', id)]
+        
+        if test_jira_ids and summary_jira_ids:
+            match = bool(set(test_jira_ids) & set(summary_jira_ids))
+            if match:
+                print(f"         ✅ JIRA ID match: {set(test_jira_ids) & set(summary_jira_ids)}")
+                return True
+        
+        # Enhanced matching for the specific case - check if the beginning of both strings match significantly
+        # For the case where test is "GRC: Test export CSV..." and summary is "GRC: Test export CSV..."
+        # Get the first 50 characters and compare
+        test_prefix = test_name[:50].lower()
+        summary_prefix = summary_clean[:50].lower()
+        
+        if len(test_prefix) > 20 and len(summary_prefix) > 20:
+            # Calculate similarity of the prefixes
+            common_length = 0
+            min_length = min(len(test_prefix), len(summary_prefix))
+            for i in range(min_length):
+                if test_prefix[i] == summary_prefix[i]:
+                    common_length += 1
+                else:
+                    break
+            
+            # If at least 80% of the prefix matches and it's substantial
+            if common_length >= min_length * 0.8 and common_length > 20:
+                print(f"         ✅ Prefix match! ({common_length}/{min_length} chars)")
+                return True
+        
+        # Check for significant word overlap
+        if len(test_identifiers) >= 2 and len(summary_identifiers) >= 2:
+            overlap = len(set(test_identifiers) & set(summary_identifiers))
+            print(f"         📊 Word overlap: {overlap}/{len(test_identifiers)}")
+            if overlap >= 2:
+                print(f"         ✅ Significant word overlap!")
+                return True
+        
+        # Check in description if available
+        if description and test_name in description:
+            print(f"         ✅ Found in description!")
+            return True
+        
+        print(f"         ❌ No match")
         return False
+    
+    def _map_suite_to_component(self, suite_name: str, valid_components: List[str]) -> Optional[str]:
+        """
+        Map test suite names to valid JIRA components.
+        
+        Args:
+            suite_name: Test suite name from the test data
+            valid_components: List of valid component names in the project
+            
+        Returns:
+            Mapped component name or None if no match found
+        """
+        suite_lower = suite_name.lower()
+        
+        # Direct mapping for common patterns
+        mappings = {
+            'grc': 'GRC',
+            'governance': 'GRC', 
+            'policy': 'GRC',
+            'application': 'Application Lifecycle',
+            'cluster': 'Cluster Lifecycle',
+            'observability': 'Observability',
+            'search': 'Search',
+            'console': 'Console',
+            'install': 'Installation',
+            'upgrade': 'Upgrade'
+        }
+        
+        # Try direct mapping first
+        for keyword, component in mappings.items():
+            if keyword in suite_lower and component in valid_components:
+                return component
+        
+        # Try fuzzy matching with valid components
+        for component in valid_components:
+            component_lower = component.lower()
+            # Check if any words from suite name appear in component name
+            suite_words = suite_lower.split()
+            for word in suite_words:
+                if len(word) > 3 and word in component_lower:
+                    return component
+        
+        # Default fallback - return first valid component if available
+        if valid_components:
+            return valid_components[0]
+        
+        return None
     
     def _determine_priority(self, analysis: Dict[str, Any]) -> str:
         """Determine JIRA priority based on analysis."""
@@ -622,15 +840,22 @@ Examples:
     
     try:
         # Get JIRA configuration from environment
-        jira_url = os.getenv("JIRA_URL")
-        jira_username = os.getenv("JIRA_USERNAME")  
+        jira_url = os.getenv("JIRA_URL", "https://issues.redhat.com")
+        jira_username = os.getenv("JIRA_USERNAME")  # Optional for PAT
         jira_api_token = os.getenv("JIRA_API_TOKEN")
         jira_project = args.project or os.getenv("JIRA_PROJECT")
         
-        if not all([jira_url, jira_username, jira_api_token, jira_project]):
-            print("❌ Missing required JIRA configuration:")
-            print("  Set environment variables: JIRA_URL, JIRA_USERNAME, JIRA_API_TOKEN, JIRA_PROJECT")
-            print("  Or use --project to override project key")
+        # Validate required configuration
+        if not jira_api_token:
+            print("❌ Missing required JIRA API token:")
+            print("  Set environment variable: JIRA_API_TOKEN")
+            print("  Get your token from: https://issues.redhat.com/secure/ViewProfile.jspa?selectedTab=com.atlassian.pats.pats-plugin:jira-user-personal-access-tokens")
+            return 1
+        
+        if not jira_project:
+            print("❌ Missing required JIRA project key:")
+            print("  Set environment variable: JIRA_PROJECT or use --project argument")
+            print("  Example project keys: RHELPLAN, ACM, OCPBUGS")
             return 1
         
         print(f"🚀 JIRA Ticket Manager")

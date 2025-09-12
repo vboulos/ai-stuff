@@ -7,7 +7,8 @@ MY_SECRET=$JIRA_USERNAME:$JIRA_API_TOKEN
 ENCODED_SECRET=$(echo -n "$MY_SECRET" | base64)
 
 python3 jira_ticket_manager.py comprehensive_analysis.json \
+  --project "ACM" \
   --labels "PICS" "jira" \
   --components "PICS" \
-  --fix-version "2.15.0" \
+  --fix-version "ACM 2.15.0" \
   --issue-type "Bug"
