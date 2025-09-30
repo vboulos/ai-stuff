@@ -84,7 +84,7 @@ def setupClaudeCli() {
         
 
         # Run claude cli
-        # ~/.npm-global/bin/claude "what is the latest java version"
+        # ~/.npm-global/bin/claude -p "what is the latest java version"
         # Check the status
         # /status
         # Exit
