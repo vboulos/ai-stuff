@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="127.0840" tests="1" failures="1">
+  <testsuite name="Root Suite" timestamp="2025-09-04T02:05:57" tests="0" file="tests/cypress/tests/e2e/Pod_governance.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="GRC: Pod policy governance " timestamp="2025-09-04T02:05:57" tests="1" time="127.0500" failures="1">
+    <testcase name="GRC: Pod policy governance  RHACM4K-1724:GRC: Pod policy governance" time="0.0000" classname="RHACM4K-1724:GRC: Pod policy governance">
+      <failure message="Timed out retrying" type="Error"><![CDATA[Error: Timed out retrying
+    at Context.check (webpack://acmqe-grc-test/./node_modules/cypress-wait-until/src/index.js:62:0)
+    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)
+    at Promise.attempt.Promise.try (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:4285:29)
+    at Context.thenFn (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118360:66)
+    at Context.then (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118611:21)
+    at wrapped (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:138862:19)
+    at <unknown> (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:144789:15)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

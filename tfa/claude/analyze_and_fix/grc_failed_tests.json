@@ -1,0 +1,92 @@
+[
+  {
+    "name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+    "status": "failed",
+    "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'",
+    "framework": "junit",
+    "class_name": "RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+    "execution_time": 0.0,
+    "suite_name": "GRC: Test export CSV functionality in GRC pages"
+  },
+  {
+    "name": "GRC: IamPolicy governance RHACM4K-1719: GRC: IamPolicy governance on a  Specifc cluster",
+    "status": "failed",
+    "failure_message": "Timed out retrying",
+    "framework": "junit",
+    "class_name": "RHACM4K-1719: GRC: IamPolicy governance on a  Specifc cluster",
+    "execution_time": 0.0,
+    "suite_name": "GRC: IamPolicy governance"
+  },
+  {
+    "name": "GRC: Donut chart for configuration policy in discovered policies - ACM-13337  \"before all\" hook for \"RHACM4K-52432: GRC: UI: Donut Card for Configuration policy in DiscoveredByCluster page \"",
+    "status": "failed",
+    "failure_message": "Timed out retrying  Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Donut chart for config...`",
+    "framework": "junit",
+    "class_name": "\"before all\" hook for \"RHACM4K-52432: GRC: UI: Donut Card for Configuration policy in DiscoveredByCluster page \"",
+    "execution_time": 0.0,
+    "suite_name": "GRC: Donut chart for configuration policy in discovered policies - ACM-13337 "
+  },
+  {
+    "name": "GRC: Pod policy governance  RHACM4K-1724:GRC: Pod policy governance",
+    "status": "failed",
+    "failure_message": "Timed out retrying",
+    "framework": "junit",
+    "class_name": "RHACM4K-1724:GRC: Pod policy governance",
+    "execution_time": 0.0,
+    "suite_name": "GRC: Pod policy governance "
+  },
+  {
+    "name": "GRC: Donut chart for certificate policy in discovered policies - ACM-13337 \"before all\" hook for \"RHACM4K-52786: GRC: UI: Donut Card for certificate policy in DiscoveredByCluster page \"",
+    "status": "failed",
+    "failure_message": "Timed out retrying  Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Donut chart for certif...`",
+    "framework": "junit",
+    "class_name": "\"before all\" hook for \"RHACM4K-52786: GRC: UI: Donut Card for certificate policy in DiscoveredByCluster page \"",
+    "execution_time": 0.0,
+    "suite_name": "GRC: Donut chart for certificate policy in discovered policies - ACM-13337"
+  },
+  {
+    "name": "GRC: Operator policy support - ACM-9287 RHACM4K-46007: GRC: Remove operator(spec.removalBehavior.operatorGroups: DeleteIfUnused) via operator policy using custom operator group and namespace(single sub used)",
+    "status": "failed",
+    "failure_message": "Timed out retrying",
+    "framework": "junit",
+    "class_name": "RHACM4K-46007: GRC: Remove operator(spec.removalBehavior.operatorGroups: DeleteIfUnused) via operator policy using custom operator group and namespace(single sub used)",
+    "execution_time": 0.0,
+    "suite_name": "GRC: Operator policy support - ACM-9287"
+  },
+  {
+    "name": "GRC: Test discovered policies pages in console \"before all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+    "status": "failed",
+    "failure_message": "Timed out retrying  Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`",
+    "framework": "junit",
+    "class_name": "\"before all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+    "execution_time": 0.0,
+    "suite_name": "GRC: Test discovered policies pages in console"
+  },
+  {
+    "name": "GRC: Test discovered policies pages in console \"after all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+    "status": "failed",
+    "failure_message": "expected 1 to equal 0  Because this error occurred during a `after all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`",
+    "framework": "junit",
+    "class_name": "\"after all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+    "execution_time": 0.0,
+    "suite_name": "GRC: Test discovered policies pages in console"
+  },
+  {
+    "name": "check the existed IAM policy",
+    "status": "failed",
+    "failure_message": "Timed out retrying after 120000ms: Expected to find element: `#test-iam-policy-before-upgrade-actions`, but never found it.",
+    "framework": "junit",
+    "class_name": "RHACM4K-859: GRC: check the policies after upgrade check the existed IAM policy",
+    "execution_time": 0.0,
+    "suite_name": "RHACM4K-859: GRC: check the policies after upgrade"
+  },
+  {
+    "name": "GRC: UI: GRC Policy namespace selection should support labels  RHACM4K-14942: GRC: Test Policy namespace label selector from UI",
+    "status": "failed",
+    "failure_message": "Timed out retrying",
+    "framework": "junit",
+    "class_name": "RHACM4K-14942: GRC: Test Policy namespace label selector from UI",
+    "execution_time": 0.0,
+    "suite_name": "GRC: UI: GRC Policy namespace selection should support labels "
+  }
+]

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="23.2750" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2025-09-04T03:09:46" tests="0" file="tests/cypress/tests/e2e/template_hub_5776_policy.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="RHACM4K-5776: GRC: Test hub-side template and managed-side template in one policy at the same time " timestamp="2025-09-04T03:09:46" tests="1" time="23.2350" failures="0">
+    <testcase name="RHACM4K-5776: GRC: Test hub-side template and managed-side template in one policy at the same time  Test hub-side template and managed-side template in one policy at the same time" time="23.1410" classname="Test hub-side template and managed-side template in one policy at the same time">
+    </testcase>
+  </testsuite>
+</testsuites>
