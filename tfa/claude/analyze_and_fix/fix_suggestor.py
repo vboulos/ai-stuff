@@ -13,14 +13,17 @@ class FixSuggestor:
     Class to suggest code fixes for test failures using Claude CLI.
     """
     
-    def __init__(self, claude_timeout: int = 120):
+    def __init__(self, claude_timeout: int = 300, runbook_path: str = None):
         """
         Initialize the FixSuggestor.
         
         Args:
-            claude_timeout: Timeout for Claude CLI calls in seconds
+            claude_timeout: Timeout for Claude CLI calls in seconds (default: 300)
+                          Fix suggestions take longer than analysis, so higher default
+            runbook_path: Optional path to runbook template file for fix prompts
         """
         self.claude_timeout = claude_timeout
+        self.runbook_path = runbook_path
     
     def suggest_fix(self, test_name: str, failure_message: str, framework: str = None, 
                    analysis_data: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -51,7 +54,12 @@ class FixSuggestor:
         
         try:
             # Create prompt for fix suggestion
-            prompt = self._create_fix_prompt(test_name, failure_message, framework, analysis_data)
+            if self.runbook_path:
+                prompt = self._create_fix_prompt_from_runbook(
+                    test_name, failure_message, framework, analysis_data, self.runbook_path
+                )
+            else:
+                prompt = self._create_fix_prompt(test_name, failure_message, framework, analysis_data)
             
             # Query Claude CLI
             result = subprocess.run(
@@ -100,6 +108,93 @@ class FixSuggestor:
         analysis_context = ""
         if analysis_data and analysis_data.get("success"):
             analysis_context = f"""
+Previous Analysis:
+- Root Cause: {analysis_data.get('root_cause', '')}
+- Category: {analysis_data.get('error_category', '')}
+- Severity: {analysis_data.get('severity', '')}
+"""
+        
+        return f"""Provide specific fix suggestions for this failed test{framework_info}:
+
+Test: {test_name}
+Error: {failure_message}{analysis_context}
+
+IMPORTANT: Use this EXACT format with ** markers:
+
+**FIX_TYPE:**
+quick_fix
+
+**PRIORITY:**
+high
+
+**ESTIMATED_EFFORT:**
+hours
+
+**CODE_CHANGES:**
+```javascript
+// Specific code changes here
+```
+
+**CONFIGURATION_CHANGES:**
+```
+// Config changes here or "None needed"
+```
+
+**DEPENDENCIES:**
+```
+// Dependencies here or "None needed"
+```
+
+**VALIDATION_STEPS:**
+1. First validation step
+2. Second validation step
+3. Third validation step
+
+**PREVENTION:**
+Specific prevention steps
+
+**IMPACT_ASSESSMENT:**
+Areas affected by this fix
+
+**ROLLBACK_PLAN:**
+How to rollback if needed"""
+    
+    def _create_fix_prompt_from_runbook(self, test_name: str, failure_message: str, 
+                                       framework: str, analysis_data: Dict[str, Any],
+                                       runbook_path: str = "fix_runbook.txt") -> str:
+        """
+        Create a fix prompt from a runbook file.
+        
+        Args:
+            test_name: Name of the failed test
+            failure_message: The failure message/error text
+            framework: Optional test framework
+            analysis_data: Optional previous analysis data
+            runbook_path: Path to the runbook template file
+            
+        Returns:
+            Formatted prompt string with variables substituted
+            
+        The runbook template can use these placeholders:
+            {test_name} - The name of the test
+            {failure_message} - The error/failure message
+            {framework} - The test framework (or "Not specified")
+            {framework_info} - Formatted framework info for display
+            {analysis_context} - Previous analysis context (or empty)
+        """
+        try:
+            # Read runbook template
+            with open(runbook_path, 'r', encoding='utf-8') as f:
+                template = f.read()
+            
+            # Prepare variables for substitution
+            framework_info = f" (Framework: {framework})" if framework else ""
+            framework_display = framework if framework else "Not specified"
+            
+            # Include analysis data if available
+            analysis_context = ""
+            if analysis_data and analysis_data.get("success"):
+                analysis_context = f"""
 **PREVIOUS ANALYSIS:**
 - Root Cause: {analysis_data.get('root_cause', '')}
 - Suggested Fix: {analysis_data.get('suggested_fix', '')}
@@ -107,60 +202,33 @@ class FixSuggestor:
 - Category: {analysis_data.get('error_category', '')}
 - Severity: {analysis_data.get('severity', '')}
 """
-        
-        return f"""Generate specific code fixes for this failed test{framework_info}:
-
-**TEST DETAILS:**
-- Test Name: {test_name}
-- Error: {failure_message}{analysis_context}
-
-Provide detailed fix suggestions in this format:
-
-**FIX_TYPE:**
-[quick_fix|refactor|configuration|dependency|infrastructure|test_update]
-
-**PRIORITY:**
-[critical|high|medium|low]
-
-**ESTIMATED_EFFORT:**
-[minutes|hours|days]
-
-**CODE_CHANGES:**
-```language
-// Show specific code changes needed
-// Include before/after examples
-// Be as specific as possible
-```
-
-**CONFIGURATION_CHANGES:**
-```
-// Any configuration file changes needed
-// Include file paths and specific settings
-```
-
-**DEPENDENCIES:**
-```
-// New dependencies or version updates needed
-// Include package names and versions
-```
-
-**VALIDATION_STEPS:**
-1. [Step to verify the fix]
-2. [How to test the fix]
-3. [Expected outcome]
-4. [Additional verification steps]
-
-**PREVENTION:**
-[How to prevent this issue in the future - be specific]
-
-**IMPACT_ASSESSMENT:**
-[What other areas might be affected by this fix]
-
-**ROLLBACK_PLAN:**
-[How to rollback if the fix causes issues]"""
+            
+            # Substitute variables in template
+            prompt = template.format(
+                test_name=test_name,
+                failure_message=failure_message,
+                framework=framework_display,
+                framework_info=framework_info,
+                analysis_context=analysis_context
+            )
+            
+            return prompt
+            
+        except FileNotFoundError:
+            # Fallback to hardcoded prompt if runbook not found
+            print(f"⚠️  Runbook not found at '{runbook_path}', using default prompt")
+            return self._create_fix_prompt(test_name, failure_message, framework, analysis_data)
+        except KeyError as e:
+            # Handle missing template variable
+            print(f"⚠️  Missing template variable in runbook: {e}, using default prompt")
+            return self._create_fix_prompt(test_name, failure_message, framework, analysis_data)
+        except Exception as e:
+            # Handle other errors
+            print(f"⚠️  Error reading runbook: {e}, using default prompt")
+            return self._create_fix_prompt(test_name, failure_message, framework, analysis_data)
 
     def _parse_fix_response(self, response: str) -> Dict[str, Any]:
-        """Parse the Claude response into structured fix data."""
+        """Parse the Claude response into structured fix data with flexible fallback."""
         
         fix_data = {
             "success": True,
@@ -177,7 +245,7 @@ Provide detailed fix suggestions in this format:
             "raw_response": response
         }
         
-        # Parse sections using regex
+        # First, try structured parsing
         sections = {}
         pattern = r'\*\*([^*]+):\*\*\s*(.*?)(?=\*\*[^*]+:\*\*|$)'
         
@@ -186,35 +254,133 @@ Provide detailed fix suggestions in this format:
             sections[section_key] = content.strip()
         
         # Map sections to fix_data
-        fix_data["fix_type"] = sections.get("FIX_TYPE", "unknown").lower()
-        fix_data["priority"] = sections.get("PRIORITY", "medium").lower()
-        fix_data["estimated_effort"] = sections.get("ESTIMATED_EFFORT", "unknown").lower()
-        fix_data["prevention"] = sections.get("PREVENTION", "")
-        fix_data["impact_assessment"] = sections.get("IMPACT_ASSESSMENT", "")
-        fix_data["rollback_plan"] = sections.get("ROLLBACK_PLAN", "")
-        
-        # Extract code blocks
-        fix_data["code_changes"] = self._extract_code_block(sections.get("CODE_CHANGES", ""))
-        fix_data["configuration_changes"] = self._extract_code_block(sections.get("CONFIGURATION_CHANGES", ""))
-        fix_data["dependencies"] = self._extract_code_block(sections.get("DEPENDENCIES", ""))
-        
-        # Parse validation steps
-        validation_text = sections.get("VALIDATION_STEPS", "")
-        fix_data["validation_steps"] = self._parse_validation_steps(validation_text)
+        if sections:
+            # Structured response found
+            fix_data["fix_type"] = self._extract_value(sections.get("FIX_TYPE", ""), ["quick_fix", "refactor", "configuration", "dependency", "infrastructure", "test_update"], "unknown")
+            fix_data["priority"] = self._extract_value(sections.get("PRIORITY", ""), ["critical", "high", "medium", "low"], "medium")
+            fix_data["estimated_effort"] = self._extract_value(sections.get("ESTIMATED_EFFORT", ""), ["minutes", "hours", "days"], "unknown")
+            fix_data["prevention"] = sections.get("PREVENTION", "")
+            fix_data["impact_assessment"] = sections.get("IMPACT_ASSESSMENT", "")
+            fix_data["rollback_plan"] = sections.get("ROLLBACK_PLAN", "")
+            
+            # Extract code blocks
+            fix_data["code_changes"] = self._extract_code_block(sections.get("CODE_CHANGES", ""))
+            fix_data["configuration_changes"] = self._extract_code_block(sections.get("CONFIGURATION_CHANGES", ""))
+            fix_data["dependencies"] = self._extract_code_block(sections.get("DEPENDENCIES", ""))
+            
+            # Parse validation steps
+            validation_text = sections.get("VALIDATION_STEPS", "")
+            fix_data["validation_steps"] = self._parse_validation_steps(validation_text)
+        else:
+            # Fallback: unstructured response - extract what we can
+            print("⚠️  Response not in structured format, using flexible parsing...")
+            fix_data = self._parse_unstructured_response(response, fix_data)
         
         # Validate that we got meaningful content
-        if not fix_data["code_changes"] and not fix_data["configuration_changes"] and not fix_data["dependencies"]:
+        has_content = any([
+            fix_data["code_changes"],
+            fix_data["configuration_changes"], 
+            fix_data["dependencies"],
+            fix_data["prevention"],
+            fix_data["impact_assessment"],
+            fix_data["rollback_plan"],
+            len(fix_data["validation_steps"]) > 0,
+            len(response.strip()) > 50  # At least some meaningful text
+        ])
+        
+        if not has_content:
             fix_data["success"] = False
             fix_data["error"] = "Failed to parse meaningful fix suggestions from response"
         
         return fix_data
     
+    def _extract_value(self, text: str, valid_values: list, default: str) -> str:
+        """Extract value from text, checking against valid values."""
+        if not text:
+            return default
+        
+        text_lower = text.lower().strip()
+        for value in valid_values:
+            if value in text_lower:
+                return value
+        return default
+    
+    def _parse_unstructured_response(self, response: str, fix_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Fallback parser for unstructured/natural language responses."""
+        
+        # Extract all code blocks
+        code_blocks = re.findall(r'```(?:\w+\n)?(.*?)```', response, re.DOTALL)
+        if code_blocks:
+            # First code block goes to code_changes
+            fix_data["code_changes"] = code_blocks[0].strip()
+            # Additional blocks go to configuration_changes
+            if len(code_blocks) > 1:
+                fix_data["configuration_changes"] = "\n\n".join(cb.strip() for cb in code_blocks[1:])
+        
+        # Extract numbered lists (likely validation steps or suggestions)
+        numbered_items = re.findall(r'^\d+\.\s+(.+)$', response, re.MULTILINE)
+        if numbered_items:
+            fix_data["validation_steps"] = numbered_items
+        
+        # Look for priority indicators
+        if any(word in response.lower() for word in ['critical', 'urgent', 'immediate']):
+            fix_data["priority"] = "critical"
+        elif 'high' in response.lower():
+            fix_data["priority"] = "high"
+        elif 'low' in response.lower():
+            fix_data["priority"] = "low"
+        
+        # Look for effort indicators
+        if any(word in response.lower() for word in ['quick', 'simple', 'easy', 'minutes']):
+            fix_data["estimated_effort"] = "minutes"
+        elif 'days' in response.lower() or 'week' in response.lower():
+            fix_data["estimated_effort"] = "days"
+        elif any(word in response.lower() for word in ['hour', 'moderate']):
+            fix_data["estimated_effort"] = "hours"
+        
+        # Use first paragraph or sentence as prevention if we don't have other content
+        if not fix_data["prevention"] and not fix_data["code_changes"]:
+            # Take first substantial paragraph as the main content
+            paragraphs = [p.strip() for p in response.split('\n\n') if len(p.strip()) > 50]
+            if paragraphs:
+                fix_data["prevention"] = paragraphs[0]
+                if len(paragraphs) > 1:
+                    fix_data["impact_assessment"] = paragraphs[1]
+        
+        # Infer fix type from content
+        response_lower = response.lower()
+        if any(word in response_lower for word in ['timeout', 'increase timeout', 'wait']):
+            fix_data["fix_type"] = "configuration"
+        elif any(word in response_lower for word in ['update', 'upgrade', 'install', 'dependency', 'package']):
+            fix_data["fix_type"] = "dependency"
+        elif any(word in response_lower for word in ['refactor', 'restructure', 'redesign']):
+            fix_data["fix_type"] = "refactor"
+        elif any(word in response_lower for word in ['test', 'assertion', 'expect']):
+            fix_data["fix_type"] = "test_update"
+        else:
+            fix_data["fix_type"] = "quick_fix"
+        
+        return fix_data
+    
     def _extract_code_block(self, text: str) -> str:
-        """Extract code from markdown code blocks."""
+        """Extract code from markdown code blocks or return raw text."""
+        if not text:
+            return ""
+        
+        # Try to extract from code blocks first
         code_match = re.search(r'```(?:\w+\n)?(.*?)```', text, re.DOTALL)
         if code_match:
             return code_match.group(1).strip()
-        return text.strip()
+        
+        # If no code block, return the text as-is (after stripping)
+        # This allows for more flexible responses
+        stripped = text.strip()
+        
+        # Filter out obvious non-code content markers
+        if stripped.lower() in ['none', 'n/a', 'not applicable', 'no changes needed']:
+            return ""
+        
+        return stripped
     
     def _parse_validation_steps(self, text: str) -> List[str]:
         """Parse validation steps from numbered list."""
@@ -310,6 +476,10 @@ Provide detailed fix suggestions in this format:
 
 # Example usage and testing
 if __name__ == "__main__":
+    print("=" * 70)
+    print("Example 1: Using hardcoded prompt (default)")
+    print("=" * 70)
+    
     suggestor = FixSuggestor()
     
     # Test with sample failure and analysis
@@ -337,3 +507,25 @@ if __name__ == "__main__":
         print("Validation Steps:", len(result["validation_steps"]), "steps")
     else:
         print("Error:", result["error"])
+    
+    print("\n" + "=" * 70)
+    print("Example 2: Using runbook template file")
+    print("=" * 70)
+    
+    # Initialize with runbook path
+    suggestor_with_runbook = FixSuggestor(runbook_path="fix_runbook.txt")
+    
+    result2 = suggestor_with_runbook.suggest_fix(
+        "test_database_connection",
+        "TimeoutError: Connection to database timed out after 30s",
+        "pytest",
+        sample_analysis
+    )
+    
+    if result2["success"]:
+        print("Fix Type:", result2["fix_type"])
+        print("Priority:", result2["priority"])
+        print("Effort:", result2["estimated_effort"])
+        print("Prevention:", result2["prevention"][:100] + "..." if len(result2["prevention"]) > 100 else result2["prevention"])
+    else:
+        print("Error:", result2["error"])

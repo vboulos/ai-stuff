@@ -1,0 +1,45 @@
+Provide specific fix suggestions for this failed test{framework_info}:
+
+Test: {test_name}
+Error: {failure_message}{analysis_context}
+
+IMPORTANT: Use this EXACT format with ** markers:
+
+**FIX_TYPE:**
+quick_fix
+
+**PRIORITY:**
+high
+
+**ESTIMATED_EFFORT:**
+hours
+
+**CODE_CHANGES:**
+```javascript
+// Specific code changes here
+```
+
+**CONFIGURATION_CHANGES:**
+```
+// Config changes here or "None needed"
+```
+
+**DEPENDENCIES:**
+```
+// Dependencies here or "None needed"
+```
+
+**VALIDATION_STEPS:**
+1. First validation step
+2. Second validation step
+3. Third validation step
+
+**PREVENTION:**
+Specific prevention steps
+
+**IMPACT_ASSESSMENT:**
+Areas affected by this fix
+
+**ROLLBACK_PLAN:**
+How to rollback if needed
+

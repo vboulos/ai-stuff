@@ -1,0 +1,25 @@
+Analyze this test failure{framework_info}:
+
+Test: {test_name}
+Error: {failure_message}
+
+Provide analysis in this format:
+
+**ROOT CAUSE:**
+[Why did it fail? Be specific about the underlying issue]
+
+**SUGGESTED FIX:**
+[High-level approach to fix the issue]
+
+**CODE EXAMPLE:**
+[Code example if helpful - show specific changes needed]
+
+**CONFIDENCE:**
+[0.1 to 1.0 - how confident are you in this analysis]
+
+**ERROR_CATEGORY:**
+[timeout|assertion|network|configuration|dependency|ui_interaction|database|authentication]
+
+**SEVERITY:**
+[critical|high|medium|low]
+

@@ -1,0 +1,47 @@
+# Test Failure Analysis Framework - Python Dependencies
+
+# Core dependencies
+requests>=2.25.0,<3.0.0
+urllib3>=1.26.0,<2.0.0
+
+# JSON processing (included in Python standard library, but specifying for clarity)
+# json - built-in
+# xml.etree.ElementTree - built-in
+
+# Subprocess and system utilities (built-in)
+# subprocess - built-in
+# sys - built-in
+# os - built-in
+# glob - built-in
+
+# Date and time handling (built-in)
+# datetime - built-in
+
+# Type hints and annotations (built-in in Python 3.8+)
+# typing - built-in
+
+# Concurrent processing (built-in)
+# concurrent.futures - built-in
+# threading - built-in
+
+# Regular expressions (built-in)
+# re - built-in
+
+# Argument parsing (built-in)
+# argparse - built-in
+
+# Optional: Development and testing dependencies
+# pytest>=6.0.0,<8.0.0
+# pytest-cov>=2.10.0,<5.0.0
+# black>=21.0.0,<24.0.0
+# flake8>=3.8.0,<7.0.0
+
+# Optional: Enhanced JSON processing
+# jq>=1.2.0,<2.0.0  # For command-line JSON processing (system package, not Python)
+
+# Note: Claude CLI must be installed separately
+# Follow installation instructions at: https://claude.ai/cli-setup
+# 
+# Installation command:
+# curl -O https://claude.ai/cli/install.sh && bash install.sh
+
