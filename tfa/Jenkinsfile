@@ -116,8 +116,8 @@ pipeline {
         GOOGLE_APPLICATION_CREDENTIALS=credentials('vincent-gcp-sa')
         CLAUDE_APPLICATION_CREDENTIALS=credentials('vincent-claude-app-creds')
         JENKINS_APPLICATION_CREDENTIALS=credentials('jenkins-pics-gcp-sa')
-        GCP_PROJECT_ID='gc-acm-test'
-        ANTHROPIC_VERTEX_PROJECT_ID='itpc-gcp-hcm-pe-eng-claude'
+        GCP_PROJECT_ID='acm-pics-headless-claude-ai'
+        ANTHROPIC_VERTEX_PROJECT_ID='acm-pics-headless-claude-ai'
         
     } 
     stages {
