@@ -131,7 +131,7 @@ def setupClaudeCli() {
         # Using the absolute path to the binary is the safest way in Jenkins
         # $HOME/.npm-global/bin/claude -e "what is the latest java version"
         # Run claude cli
-         ~/.npm-global/bin/claude -p "what is the latest java version" --model claude-3-5-sonnet@v1:0
+         ~/.npm-global/bin/claude -p "what is the latest java version" --model claude-3-5-sonnet
         # Check the status
          /status
         # Exit
