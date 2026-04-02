@@ -107,7 +107,7 @@ def setupClaudeCli() {
 
         # Use '>>' safely, but ensure we don't double-up if the agent is reused
         echo "export CLAUDE_CODE_USE_VERTEX=1" >> ~/.bashrc
-        echo "export CLOUD_ML_REGION=us-central1" >> ~/.bashrc
+        echo "export CLOUD_ML_REGION=us-east5" >> ~/.bashrc
         echo "export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID" >> ~/.bashrc
 
         # 3. SETUP NPM GLOBAL
