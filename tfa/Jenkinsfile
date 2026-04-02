@@ -135,12 +135,12 @@ def setupClaudeCli() {
         
         #######
         # Automatically find the first available Claude model in the project
-            AVAILABLE_MODEL=$($WORKDIR/bin/google-cloud-sdk/bin/gcloud ai models list --region=us-east5 --limit=1 --format="value(modelId)")
+            AVAILABLE_MODEL=\$($WORKDIR/bin/google-cloud-sdk/bin/gcloud ai models list --region=us-east5 --limit=1 --format="value(modelId)")
             echo "--- Using discovered model: $AVAILABLE_MODEL ---"
         # Run Claude with the discovered ID
             /home/jenkins/.npm-global/bin/claude -p 'what is the latest java version' --model "$AVAILABLE_MODEL"
         #########
-        
+
         # Check the status
          /status
         # Exit
