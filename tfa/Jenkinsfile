@@ -36,62 +36,98 @@ def setupGCP() {
 
 def setupClaudeCli() {
     echo "Setting up Claude CLI"
-    sh """
-        # Export the variable AND run the command in the same script
-        # export JENKINS_APPLICATION_CREDENTIALS=$JENKINS_APPLICATION_CREDENTIALS
-        export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
-        export CLAUDE_APPLICATION_CREDENTIALS=$CLAUDE_APPLICATION_CREDENTIALS
-        mkdir -p ~/.config/gcloud
-        cp $CLAUDE_APPLICATION_CREDENTIALS ~/.config/gcloud/application_default_credentials.json
+    // sh """
+    //     # Export the variable AND run the command in the same script
+    //     # export JENKINS_APPLICATION_CREDENTIALS=$JENKINS_APPLICATION_CREDENTIALS
+    //     export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
+    //     export CLAUDE_APPLICATION_CREDENTIALS=$CLAUDE_APPLICATION_CREDENTIALS
+    //     mkdir -p ~/.config/gcloud
+    //     cp $CLAUDE_APPLICATION_CREDENTIALS ~/.config/gcloud/application_default_credentials.json
         
-        echo "--- Verifying ADC configuration file ---"
-        # cat ~/.config/gcloud/application_default_credentials.json
+    //     echo "--- Verifying ADC configuration file ---"
+    //     # cat ~/.config/gcloud/application_default_credentials.json
 
+    //     export CLAUDE_CODE_USE_VERTEX=1
+    //     export CLOUD_ML_REGION=us-east5
+    //     export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID
+
+    //     echo 'export CLAUDE_CODE_USE_VERTEX=1' >> ~/.bashrc
+    //     echo 'export CLOUD_ML_REGION=us-east5' >> ~/.bashrc
+    //     echo 'export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID' >> ~/.bashrc
+    //     source ~/.bashrc
+
+    //     mkdir ~/.npm-global
+    //     npm config set prefix '~/.npm-global' 
+    //     echo 'export PATH=$PATH:$HOME/.npm-global/bin' >> ~/.bashrc
+    //     source ~/.bashrc
+
+    //     # Install Claude Code (If you previously installed Claude Code, you must first uninstall)
+    //     # npm uninstall -g @anthropic-ai/claude-code
+    //     npm install -g @anthropic-ai/claude-code 
+        
+    //     ############
+    //     #$WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding $ANTHROPIC_VERTEX_PROJECT_ID \
+    //     #    --member="serviceAccount:vboulos@redhat.com" \
+    //     #    --role="roles/aiplatform.user"
+        
+    //     #"$WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding $ANTHROPIC_VERTEX_PROJECT_ID \
+    //     #    --member="user:vboulos@redhat.com" \
+    //     #    --role="roles/aiplatform.user
+    //     ##############
+
+    //     # list of projects
+    //     # $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects list --format="json"
+        
+    //     $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+    //     $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project cloudability-it-gemini
+    //     $WORKDIR/bin/google-cloud-sdk/bin/gcloud config set project $ANTHROPIC_VERTEX_PROJECT_ID
+    //     $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth list
+
+        
+
+    //     # Run claude cli
+    //     # ~/.npm-global/bin/claude -p "what is the latest java version"
+    //     # Check the status
+    //     # /status
+    //     # Exit
+    //     # exit
+
+    // """
+
+    sh """
+        # 1. IMMEDIATE AUTH (Do this first)
+        export GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud config set project $ANTHROPIC_VERTEX_PROJECT_ID
+
+        # 2. SETUP ENVIRONMENT VARIABLES
         export CLAUDE_CODE_USE_VERTEX=1
         export CLOUD_ML_REGION=us-east5
         export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID
 
-        echo 'export CLAUDE_CODE_USE_VERTEX=1' >> ~/.bashrc
-        echo 'export CLOUD_ML_REGION=us-east5' >> ~/.bashrc
-        echo 'export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID' >> ~/.bashrc
-        source ~/.bashrc
+        # Fix the echo commands to use double quotes so variables expand
+        echo "export CLAUDE_CODE_USE_VERTEX=1" >> ~/.bashrc
+        echo "export CLOUD_ML_REGION=us-east5" >> ~/.bashrc
+        echo "export ANTHROPIC_VERTEX_PROJECT_ID=$ANTHROPIC_VERTEX_PROJECT_ID" >> ~/.bashrc
 
-        mkdir ~/.npm-global
+        # 3. SETUP NPM GLOBAL
+        mkdir -p ~/.npm-global
         npm config set prefix '~/.npm-global' 
         echo 'export PATH=$PATH:$HOME/.npm-global/bin' >> ~/.bashrc
         source ~/.bashrc
 
-        # Install Claude Code (If you previously installed Claude Code, you must first uninstall)
-        # npm uninstall -g @anthropic-ai/claude-code
+        # 4. INSTALL CLAUDE CODE
         npm install -g @anthropic-ai/claude-code 
-        
-        ############
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding $ANTHROPIC_VERTEX_PROJECT_ID \
-            --member="serviceAccount:vboulos@redhat.com" \
-            --role="roles/aiplatform.user"
-        
-        "$WORKDIR/bin/google-cloud-sdk/bin/gcloud projects add-iam-policy-binding $ANTHROPIC_VERTEX_PROJECT_ID \
-            --member="user:vboulos@redhat.com" \
-            --role="roles/aiplatform.user
-        ##############
 
-        # list of projects
-        # $WORKDIR/bin/google-cloud-sdk/bin/gcloud projects list --format="json"
-        
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project cloudability-it-gemini
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud config set project $ANTHROPIC_VERTEX_PROJECT_ID
-        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth list
+        # 5. CONFIGURE APPLICATION DEFAULT CREDENTIALS (ADC)
+        mkdir -p ~/.config/gcloud
+        cp $GOOGLE_APPLICATION_CREDENTIALS ~/.config/gcloud/application_default_credentials.json
 
-        
+        # Align quota project with your working project to avoid 403 errors
+        $WORKDIR/bin/google-cloud-sdk/bin/gcloud auth application-default set-quota-project $ANTHROPIC_VERTEX_PROJECT_ID
 
-        # Run claude cli
-        # ~/.npm-global/bin/claude -p "what is the latest java version"
-        # Check the status
-        # /status
-        # Exit
-        # exit
-
+        # 6. RUN CLAUDE (Using npx or full path ensures it's found)
+        ~/.npm-global/bin/claude "what is the latest java version" --once
     """
 }
 
