@@ -1,43 +1,49 @@
 #!/usr/bin/env python3
 """
-Fix Suggester Class - Suggests code fixes for test failures using Claude CLI
+Fix Suggester Class - Suggests code fixes for test failures using Ollama
 """
 
-import subprocess
 import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
+try:
+    import ollama
+except ImportError:
+    raise ImportError("Please install ollama: pip install ollama")
+
 class FixSuggestor:
     """
-    Class to suggest code fixes for test failures using Claude CLI.
+    Class to suggest code fixes for test failures using Ollama.
     """
-    
-    def __init__(self, claude_timeout: int = 120):
+
+    def __init__(self, model: str = "llama3.1", timeout: int = 120):
         """
         Initialize the FixSuggestor.
-        
+
         Args:
-            claude_timeout: Timeout for Claude CLI calls in seconds
+            model: Ollama model to use (e.g., 'llama3.1', 'mistral', 'codellama')
+            timeout: Timeout for Ollama calls in seconds
         """
-        self.claude_timeout = claude_timeout
+        self.model = model
+        self.timeout = timeout
     
-    def suggest_fix(self, test_name: str, failure_message: str, framework: str = None, 
+    def suggest_fix(self, test_name: str, failure_message: str, framework: str = None,
                    analysis_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Generate a code fix suggestion for a test failure.
-        
+
         Args:
             test_name: Name of the failed test
             failure_message: The failure message/error text
             framework: Optional test framework
             analysis_data: Optional previous analysis data to enhance fix suggestions
-            
+
         Returns:
             Dictionary with:
             - success: bool
             - fix_type: str
-            - priority: str  
+            - priority: str
             - estimated_effort: str
             - code_changes: str
             - configuration_changes: str
@@ -48,45 +54,44 @@ class FixSuggestor:
             - error: str (if failed)
             - suggested_at: str (timestamp)
         """
-        
+
         try:
             # Create prompt for fix suggestion
             prompt = self._create_fix_prompt(test_name, failure_message, framework, analysis_data)
-            
-            # Query Claude CLI
-            result = subprocess.run(
-                ["claude", "--"],
-                input=prompt,
-                text=True,
-                capture_output=True,
-                timeout=self.claude_timeout
+
+            # Query Ollama
+            response = ollama.chat(
+                model=self.model,
+                messages=[
+                    {
+                        'role': 'user',
+                        'content': prompt
+                    }
+                ],
+                options={
+                    'temperature': 0.1,  # Low temperature for more consistent fix suggestions
+                }
             )
-            
-            if result.returncode != 0:
+
+            if not response or 'message' not in response:
                 return {
                     "success": False,
-                    "error": f"Claude CLI error: {result.stderr}",
+                    "error": "Invalid response from Ollama",
                     "suggested_at": datetime.now().isoformat()
                 }
-            
-            response = result.stdout.strip()
-            
+
+            response_text = response['message']['content']
+
             # Parse response
-            fix_data = self._parse_fix_response(response)
+            fix_data = self._parse_fix_response(response_text)
             fix_data["suggested_at"] = datetime.now().isoformat()
-            
+
             return fix_data
-            
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": f"Claude CLI timeout after {self.claude_timeout} seconds",
-                "suggested_at": datetime.now().isoformat()
-            }
+
         except Exception as e:
             return {
                 "success": False,
-                "error": str(e),
+                "error": f"Ollama error: {str(e)}",
                 "suggested_at": datetime.now().isoformat()
             }
     

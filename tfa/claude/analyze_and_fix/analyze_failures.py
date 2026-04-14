@@ -1,36 +1,42 @@
 #!/usr/bin/env python3
 """
-Failure Analysis Class - Analyzes test failures using Claude CLI
+Failure Analysis Class - Analyzes test failures using Ollama
 """
 
-import subprocess
 import re
 from datetime import datetime
 from typing import Dict, Any, Optional
 
+try:
+    import ollama
+except ImportError:
+    raise ImportError("Please install ollama: pip install ollama")
+
 class FailureAnalyzer:
     """
-    Class to analyze test failures using Claude CLI.
+    Class to analyze test failures using Ollama.
     """
-    
-    def __init__(self, claude_timeout: int = 120):
+
+    def __init__(self, model: str = "llama3.1", timeout: int = 120):
         """
         Initialize the FailureAnalyzer.
-        
+
         Args:
-            claude_timeout: Timeout for Claude CLI calls in seconds
+            model: Ollama model to use (e.g., 'llama3.1', 'mistral', 'codellama')
+            timeout: Timeout for Ollama calls in seconds
         """
-        self.claude_timeout = claude_timeout
+        self.model = model
+        self.timeout = timeout
     
     def analyze_failure(self, test_name: str, failure_message: str, framework: str = None) -> Dict[str, Any]:
         """
-        Analyze a test failure using Claude CLI.
-        
+        Analyze a test failure using Ollama.
+
         Args:
             test_name: Name of the failed test
             failure_message: The failure message/error text
             framework: Optional test framework (pytest, jest, cypress, etc.)
-            
+
         Returns:
             Dictionary with:
             - success: bool
@@ -41,45 +47,44 @@ class FailureAnalyzer:
             - error: str (if failed)
             - analyzed_at: str (timestamp)
         """
-        
+
         try:
             # Create prompt for analysis
             prompt = self._create_analysis_prompt(test_name, failure_message, framework)
-            
-            # Query Claude CLI
-            result = subprocess.run(
-                ["claude", "--"],
-                input=prompt,
-                text=True,
-                capture_output=True,
-                timeout=self.claude_timeout
+
+            # Query Ollama
+            response = ollama.chat(
+                model=self.model,
+                messages=[
+                    {
+                        'role': 'user',
+                        'content': prompt
+                    }
+                ],
+                options={
+                    'temperature': 0.1,  # Low temperature for more consistent analysis
+                }
             )
-            
-            if result.returncode != 0:
+
+            if not response or 'message' not in response:
                 return {
                     "success": False,
-                    "error": f"Claude CLI error: {result.stderr}",
+                    "error": "Invalid response from Ollama",
                     "analyzed_at": datetime.now().isoformat()
                 }
-            
-            response = result.stdout.strip()
-            
+
+            response_text = response['message']['content']
+
             # Parse response
-            analysis_data = self._parse_analysis_response(response)
+            analysis_data = self._parse_analysis_response(response_text)
             analysis_data["analyzed_at"] = datetime.now().isoformat()
-            
+
             return analysis_data
-            
-        except subprocess.TimeoutExpired:
-            return {
-                "success": False,
-                "error": f"Claude CLI timeout after {self.claude_timeout} seconds",
-                "analyzed_at": datetime.now().isoformat()
-            }
+
         except Exception as e:
             return {
                 "success": False,
-                "error": str(e),
+                "error": f"Ollama error: {str(e)}",
                 "analyzed_at": datetime.now().isoformat()
             }
     
