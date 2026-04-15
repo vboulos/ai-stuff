@@ -206,20 +206,56 @@ Provide analysis in this format:
 
 # Example usage and testing
 if __name__ == "__main__":
-    analyzer = FailureAnalyzer()
-    
-    # Test with sample failure
-    result = analyzer.analyze_failure(
-        "test_login",
-        "AssertionError: Expected status code 200, but got 401",
-        "pytest"
-    )
-    
-    if result["success"]:
-        print("Root Cause:", result["root_cause"])
-        print("Fix:", result["suggested_fix"])
-        print("Confidence:", result["confidence_score"])
-        print("Category:", result["error_category"])
-        print("Severity:", result["severity"])
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(description='Analyze test failures using Ollama')
+    parser.add_argument('--model', default='llama3.1', help='Ollama model to use (default: llama3.1)')
+    parser.add_argument('--input', help='JSON file with test failures to analyze')
+    parser.add_argument('--output', help='Output JSON file for results')
+    parser.add_argument('--framework', help='Test framework (e.g., pytest, jest)')
+
+    args = parser.parse_args()
+
+    analyzer = FailureAnalyzer(model=args.model)
+
+    # If input file is provided, process it
+    if args.input:
+        try:
+            with open(args.input, 'r') as f:
+                test_failures = json.load(f)
+
+            # Handle both list and dict formats
+            if isinstance(test_failures, dict):
+                for key in ['tests', 'failures', 'failed_tests']:
+                    if key in test_failures:
+                        test_failures = test_failures[key]
+                        break
+
+            results = analyzer.analyze_multiple_failures(test_failures, args.framework)
+
+            if args.output:
+                with open(args.output, 'w') as f:
+                    json.dump(results, f, indent=2)
+                print(f"\n✅ Results saved to: {args.output}")
+            else:
+                print(json.dumps(results, indent=2))
+
+        except Exception as e:
+            print(f"❌ Error: {e}")
     else:
-        print("Error:", result["error"])
+        # Test with sample failure
+        result = analyzer.analyze_failure(
+            "test_login",
+            "AssertionError: Expected status code 200, but got 401",
+            "pytest"
+        )
+
+        if result["success"]:
+            print("Root Cause:", result["root_cause"])
+            print("Fix:", result["suggested_fix"])
+            print("Confidence:", result["confidence_score"])
+            print("Category:", result["error_category"])
+            print("Severity:", result["severity"])
+        else:
+            print("Error:", result["error"])

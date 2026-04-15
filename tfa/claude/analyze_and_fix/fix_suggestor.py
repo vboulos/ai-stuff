@@ -315,30 +315,65 @@ Provide detailed fix suggestions in this format:
 
 # Example usage and testing
 if __name__ == "__main__":
-    suggestor = FixSuggestor()
-    
-    # Test with sample failure and analysis
-    sample_analysis = {
-        "success": True,
-        "root_cause": "Authentication token is invalid or expired",
-        "suggested_fix": "Check token validation logic",
-        "confidence_score": 0.8,
-        "error_category": "authentication",
-        "severity": "high"
-    }
-    
-    result = suggestor.suggest_fix(
-        "test_login",
-        "AssertionError: Expected status code 200, but got 401",
-        "pytest",
-        sample_analysis
-    )
-    
-    if result["success"]:
-        print("Fix Type:", result["fix_type"])
-        print("Priority:", result["priority"])
-        print("Effort:", result["estimated_effort"])
-        print("Code Changes:", result["code_changes"][:100] + "..." if len(result["code_changes"]) > 100 else result["code_changes"])
-        print("Validation Steps:", len(result["validation_steps"]), "steps")
+    import argparse
+    import json
+
+    parser = argparse.ArgumentParser(description='Suggest fixes for test failures using Ollama')
+    parser.add_argument('--model', default='llama3.1', help='Ollama model to use (default: llama3.1)')
+    parser.add_argument('--input', help='JSON file with analysis results')
+    parser.add_argument('--output', help='Output JSON file for fix suggestions')
+
+    args = parser.parse_args()
+
+    suggestor = FixSuggestor(model=args.model)
+
+    # If input file is provided, process it
+    if args.input:
+        try:
+            with open(args.input, 'r') as f:
+                analysis_results = json.load(f)
+
+            # Handle both list and dict formats
+            if isinstance(analysis_results, dict):
+                if 'results' in analysis_results:
+                    analysis_results = analysis_results['results']
+                else:
+                    analysis_results = [analysis_results]
+
+            results = suggestor.suggest_fixes_for_analyses(analysis_results)
+
+            if args.output:
+                with open(args.output, 'w') as f:
+                    json.dump(results, f, indent=2)
+                print(f"\n✅ Results saved to: {args.output}")
+            else:
+                print(json.dumps(results, indent=2))
+
+        except Exception as e:
+            print(f"❌ Error: {e}")
     else:
-        print("Error:", result["error"])
+        # Test with sample failure and analysis
+        sample_analysis = {
+            "success": True,
+            "root_cause": "Authentication token is invalid or expired",
+            "suggested_fix": "Check token validation logic",
+            "confidence_score": 0.8,
+            "error_category": "authentication",
+            "severity": "high"
+        }
+
+        result = suggestor.suggest_fix(
+            "test_login",
+            "AssertionError: Expected status code 200, but got 401",
+            "pytest",
+            sample_analysis
+        )
+
+        if result["success"]:
+            print("Fix Type:", result["fix_type"])
+            print("Priority:", result["priority"])
+            print("Effort:", result["estimated_effort"])
+            print("Code Changes:", result["code_changes"][:100] + "..." if len(result["code_changes"]) > 100 else result["code_changes"])
+            print("Validation Steps:", len(result["validation_steps"]), "steps")
+        else:
+            print("Error:", result["error"])
