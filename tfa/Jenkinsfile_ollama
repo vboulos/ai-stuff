@@ -34,7 +34,7 @@ pipeline {
                     
                     # 3. Pull a small model (crucial for 4Gi RAM limit)
                     # ollama pull tinyllama
-                    ollama pull llama3
+                    ollama pull llama3.1
                     
                     echo "----- Execution phase -----"
                     cd tfa/claude/analyze_and_fix
