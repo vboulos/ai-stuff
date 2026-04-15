@@ -168,25 +168,33 @@ Provide analysis in this format:
     def analyze_multiple_failures(self, test_cases: list, framework: str = None) -> list:
         """
         Analyze multiple test failures.
-        
+
         Args:
             test_cases: List of test case dictionaries
             framework: Optional framework to apply to all tests
-            
+
         Returns:
             List of analysis results
         """
+        import time
         results = []
-        
+        start_time = time.time()
+
         for i, test_case in enumerate(test_cases, 1):
             test_name = test_case.get('name') or test_case.get('test_name') or f"test_{i}"
             failure_message = test_case.get('failure_message') or test_case.get('error') or test_case.get('message', '')
             test_framework = test_case.get('framework') or framework
-            
-            print(f"🔬 Analyzing {i}/{len(test_cases)}: {test_name}")
-            
+
+            iteration_start = time.time()
+            print(f"🔬 [{i}/{len(test_cases)}] Analyzing: {test_name[:80]}...")
+
             analysis = self.analyze_failure(test_name, failure_message, test_framework)
-            
+
+            iteration_time = time.time() - iteration_start
+            elapsed_total = time.time() - start_time
+            avg_time = elapsed_total / i
+            est_remaining = avg_time * (len(test_cases) - i)
+
             # Add original test info
             result = {
                 "test_name": test_name,
@@ -194,14 +202,14 @@ Provide analysis in this format:
                 "original_test": test_case,
                 "analysis": analysis
             }
-            
+
             results.append(result)
-            
+
             if analysis["success"]:
-                print(f"✅ Analysis completed (confidence: {analysis['confidence_score']:.2f})")
+                print(f"   ✅ Done in {iteration_time:.1f}s (confidence: {analysis['confidence_score']:.2f}) | ETA: {est_remaining:.0f}s")
             else:
-                print(f"❌ Analysis failed: {analysis['error']}")
-        
+                print(f"   ❌ Failed in {iteration_time:.1f}s: {analysis.get('error', 'Unknown error')[:60]}")
+
         return results
 
 # Example usage and testing

@@ -121,8 +121,20 @@ Examples:
     parser.add_argument(
         '--timeout',
         type=int,
-        default=120,
-        help='Timeout for Ollama calls in seconds (default: 120)'
+        default=60,
+        help='Timeout for Ollama calls in seconds (default: 60)'
+    )
+
+    parser.add_argument(
+        '--limit',
+        type=int,
+        help='Limit number of tests to process (useful for testing)'
+    )
+
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Show detailed progress and timing information'
     )
 
     parser.add_argument(
@@ -148,12 +160,42 @@ Examples:
     # Load test failures
     print("📂 Loading test failures...")
     test_failures = load_test_failures(args.input_file)
+
+    # Apply limit if specified
+    if args.limit and args.limit < len(test_failures):
+        print(f"⚠️  Limiting to first {args.limit} tests (out of {len(test_failures)} total)")
+        test_failures = test_failures[:args.limit]
+
     print(f"✅ Loaded {len(test_failures)} test failure(s)")
     print()
 
     # Initialize analyzer
     print(f"🤖 Initializing analyzer with model: {args.model}")
     analyzer = FailureAnalyzer(model=args.model, timeout=args.timeout)
+
+    # Test Ollama connection
+    print("🔌 Testing Ollama connection...")
+    try:
+        import ollama
+        test_response = ollama.list()
+        print(f"✅ Ollama is running. Available models: {', '.join([m['name'] for m in test_response.get('models', [])[:5]])}")
+
+        # Check if requested model exists
+        available_models = [m['name'] for m in test_response.get('models', [])]
+        model_exists = any(args.model in model for model in available_models)
+        if not model_exists:
+            print(f"⚠️  Warning: Model '{args.model}' not found. Available models: {', '.join(available_models)}")
+            response = input(f"Continue anyway? (y/n): ")
+            if response.lower() != 'y':
+                print("❌ Aborted by user")
+                sys.exit(1)
+    except Exception as e:
+        print(f"⚠️  Warning: Could not verify Ollama connection: {e}")
+        response = input("Continue anyway? (y/n): ")
+        if response.lower() != 'y':
+            print("❌ Aborted by user")
+            sys.exit(1)
+    print()
 
     # Analyze failures
     print("🔬 Analyzing test failures...")

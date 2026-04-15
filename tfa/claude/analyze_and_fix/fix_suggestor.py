@@ -233,45 +233,53 @@ Provide detailed fix suggestions in this format:
     def suggest_fixes_for_analyses(self, analysis_results: list) -> list:
         """
         Generate fix suggestions for multiple analysis results.
-        
+
         Args:
             analysis_results: List of analysis result dictionaries
-            
+
         Returns:
             List of results with added fix suggestions
         """
+        import time
         results = []
-        
+        start_time = time.time()
+
         for i, analysis_result in enumerate(analysis_results, 1):
             test_name = analysis_result.get("test_name", f"test_{i}")
             framework = analysis_result.get("framework")
             original_test = analysis_result.get("original_test", {})
             analysis = analysis_result.get("analysis", {})
-            
+
             failure_message = original_test.get("failure_message", "")
-            
-            print(f"🛠️  Generating fix {i}/{len(analysis_results)}: {test_name}")
-            
+
+            iteration_start = time.time()
+            print(f"🛠️  [{i}/{len(analysis_results)}] Generating fix: {test_name[:80]}...")
+
             fix_suggestion = self.suggest_fix(
-                test_name, 
-                failure_message, 
-                framework, 
+                test_name,
+                failure_message,
+                framework,
                 analysis
             )
-            
+
+            iteration_time = time.time() - iteration_start
+            elapsed_total = time.time() - start_time
+            avg_time = elapsed_total / i
+            est_remaining = avg_time * (len(analysis_results) - i)
+
             # Add fix suggestion to the result
             result = analysis_result.copy()
             result["fix_suggestion"] = fix_suggestion
-            
+
             results.append(result)
-            
+
             if fix_suggestion["success"]:
                 fix_type = fix_suggestion.get("fix_type", "unknown")
                 priority = fix_suggestion.get("priority", "medium")
-                print(f"✅ Fix generated (Type: {fix_type}, Priority: {priority})")
+                print(f"   ✅ Done in {iteration_time:.1f}s (Type: {fix_type}, Priority: {priority}) | ETA: {est_remaining:.0f}s")
             else:
-                print(f"❌ Fix generation failed: {fix_suggestion.get('error', 'Unknown error')}")
-        
+                print(f"   ❌ Failed in {iteration_time:.1f}s: {fix_suggestion.get('error', 'Unknown error')[:60]}")
+
         return results
     
     def get_fix_summary(self, results_with_fixes: list) -> Dict[str, Any]:
