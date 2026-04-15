@@ -138,6 +138,18 @@ Examples:
     )
 
     parser.add_argument(
+        '--yes', '-y',
+        action='store_true',
+        help='Skip confirmation prompts (useful for CI/CD environments)'
+    )
+
+    parser.add_argument(
+        '--skip-verify',
+        action='store_true',
+        help='Skip Ollama connection verification (faster startup in CI/CD)'
+    )
+
+    parser.add_argument(
         '--analyze-only',
         action='store_true',
         help='Only analyze failures, do not generate fix suggestions'
@@ -173,29 +185,48 @@ Examples:
     print(f"🤖 Initializing analyzer with model: {args.model}")
     analyzer = FailureAnalyzer(model=args.model, timeout=args.timeout)
 
-    # Test Ollama connection
-    print("🔌 Testing Ollama connection...")
-    try:
-        import ollama
-        test_response = ollama.list()
-        print(f"✅ Ollama is running. Available models: {', '.join([m['name'] for m in test_response.get('models', [])[:5]])}")
+    # Test Ollama connection (unless --skip-verify)
+    if not args.skip_verify:
+        print("🔌 Testing Ollama connection...")
+        try:
+            import ollama
+            test_response = ollama.list()
+            # Handle both 'name' and 'model' keys
+            available_models = [m.get('model', m.get('name', 'unknown')) for m in test_response.get('models', [])]
+            print(f"✅ Ollama is running. Available models: {', '.join(available_models[:5])}")
 
-        # Check if requested model exists
-        available_models = [m['name'] for m in test_response.get('models', [])]
-        model_exists = any(args.model in model for model in available_models)
-        if not model_exists:
-            print(f"⚠️  Warning: Model '{args.model}' not found. Available models: {', '.join(available_models)}")
-            response = input(f"Continue anyway? (y/n): ")
-            if response.lower() != 'y':
-                print("❌ Aborted by user")
-                sys.exit(1)
-    except Exception as e:
-        print(f"⚠️  Warning: Could not verify Ollama connection: {e}")
-        response = input("Continue anyway? (y/n): ")
-        if response.lower() != 'y':
-            print("❌ Aborted by user")
-            sys.exit(1)
-    print()
+            # Check if requested model exists
+            model_exists = any(args.model in model for model in available_models)
+            if not model_exists:
+                print(f"⚠️  Warning: Model '{args.model}' not found. Available models: {', '.join(available_models)}")
+                if not args.yes:
+                    try:
+                        response = input(f"Continue anyway? (y/n): ")
+                        if response.lower() != 'y':
+                            print("❌ Aborted by user")
+                            sys.exit(1)
+                    except (EOFError, KeyboardInterrupt):
+                        print("\n❌ No interactive terminal available. Use --yes to skip prompts.")
+                        sys.exit(1)
+                else:
+                    print("⚠️  Continuing anyway (--yes flag enabled)")
+        except Exception as e:
+            print(f"⚠️  Warning: Could not verify Ollama connection: {e}")
+            if not args.yes:
+                try:
+                    response = input("Continue anyway? (y/n): ")
+                    if response.lower() != 'y':
+                        print("❌ Aborted by user")
+                        sys.exit(1)
+                except (EOFError, KeyboardInterrupt):
+                    print("\n❌ No interactive terminal available. Use --yes to skip prompts.")
+                    sys.exit(1)
+            else:
+                print("⚠️  Continuing anyway (--yes flag enabled)")
+        print()
+    else:
+        print("⏩ Skipping Ollama connection verification (--skip-verify enabled)")
+        print()
 
     # Analyze failures
     print("🔬 Analyzing test failures...")
