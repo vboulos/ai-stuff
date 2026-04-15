@@ -34,7 +34,7 @@ pipeline {
                     
                     # 3. Pull a small model (crucial for 4Gi RAM limit)
                     # ollama pull tinyllama
-                    ollama pull llama3.2
+                    ollama pull llama3.1
                     
                     echo "----- Execution phase -----"
                     cd tfa/claude/analyze_and_fix
@@ -45,7 +45,7 @@ pipeline {
                     python3 junit_xml_to_json.py junit_xml_files/* --output tests_analysis/grc_failed_tests.json --simple
 
                     # Analyze the failures in the generated json file, provide fix suggestions and generate them into a final json file that is ready for processing 
-                    python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --model llama3.2 --output tests_analysis/analysis_and_fixes.json
+                    python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --model llama3.1 --output tests_analysis/analysis_and_fixes.json
                 """
                 }
             }
