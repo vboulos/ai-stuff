@@ -1,467 +1,480 @@
-# Test Failure Analysis and Fix Suggestion Framework
+# Test Failure Analysis with Ollama
 
-A comprehensive Python framework for analyzing test failures and generating automated fix suggestions using Claude AI. This modular system processes test results, provides root cause analysis, and suggests specific code fixes.
+Automated test failure analysis and fix suggestions using local LLMs via Ollama.
 
-## 🎯 Overview
-
-This framework consists of three main components:
-
-- **`analyze_failures.py`** - Analyzes test failures to identify root causes
-- **`fix_suggestor.py`** - Generates specific code fixes and solutions
-- **`analyze_and_suggest_fixes.py`** - Orchestrates the complete workflow
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│  JSON Test      │    │   Failure        │    │  Fix           │
-│  Results        │───▶│   Analyzer       │───▶│  Suggestor     │
-│                 │    │                  │    │                │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │                        │
-                                ▼                        ▼
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │  Root Cause      │    │  Code Fixes &   │
-                       │  Analysis        │    │  Suggestions    │
-                       └──────────────────┘    └─────────────────┘
-                                │                        │
-                                └───────────▶┌──────────────────┐
-                                             │ Comprehensive    │
-                                             │ JSON Report      │
-                                             └──────────────────┘
-```
-
-## 📦 Components
-
-### 1. FailureAnalyzer (`analyze_failures.py`)
-
-**Purpose**: Analyzes test failures using Claude AI to identify root causes.
-
-**Key Features**:
-- Root cause identification
-- Confidence scoring (0.1-1.0)
-- Error categorization (timeout, assertion, network, etc.)
-- Severity assessment (critical, high, medium, low)
-- Framework-specific analysis
-
-**Example Usage**:
-```python
-from analyze_failures import FailureAnalyzer
-
-analyzer = FailureAnalyzer(claude_timeout=120)
-result = analyzer.analyze_failure(
-    test_name="test_login",
-    failure_message="AssertionError: Expected 200, got 401",
-    framework="pytest"
-)
-
-print(f"Root Cause: {result['root_cause']}")
-print(f"Confidence: {result['confidence_score']}")
-```
-
-### 2. FixSuggestor (`fix_suggestor.py`)
-
-**Purpose**: Generates specific code fixes and implementation suggestions.
-
-**Key Features**:
-- Fix type classification (quick_fix, refactor, configuration, etc.)
-- Priority assessment (critical, high, medium, low)
-- Effort estimation (minutes, hours, days)
-- Code examples and changes
-- Validation steps
-- Prevention strategies
-
-**Example Usage**:
-```python
-from fix_suggestor import FixSuggestor
-
-suggestor = FixSuggestor(claude_timeout=120)
-result = suggestor.suggest_fix(
-    test_name="test_login",
-    failure_message="AssertionError: Expected 200, got 401",
-    framework="pytest",
-    analysis_data=previous_analysis
-)
-
-print(f"Fix Type: {result['fix_type']}")
-print(f"Code Changes: {result['code_changes']}")
-```
-
-### 3. TestFailureOrchestrator (`analyze_and_suggest_fixes.py`)
-
-**Purpose**: Orchestrates the complete workflow from test results to comprehensive analysis.
-
-**Key Features**:
-- Parallel and sequential processing
-- Multiple input formats support
-- Comprehensive JSON output
-- Error handling and recovery
-- Progress tracking and statistics
-
-## 🚀 Quick Start
-
-### Prerequisites
+## 🚀 Quick Start (TL;DR)
 
 ```bash
-# Install required dependencies
-pip install requests
+# 1. Start Ollama
+ollama serve &
 
-# Ensure Claude CLI is installed and configured
-# Follow Claude CLI setup instructions
+# 2. Install model
+ollama pull llama3.2
+
+# 3. Run analysis
+python3 analyze_and_suggest_fixes.py \
+    tests_analysis/grc_failed_tests.json \
+    --model llama3.2 \
+    --output tests_analysis/analysis_and_fixes.json \
+    --yes \
+    --skip-verify
 ```
 
-### Basic Usage
+**Expected time:** 2-3 minutes for 10 tests  
+**Memory needed:** ~2 GB  
+
+👉 **See [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for more commands**
+
+---
+
+## 📋 What This Does
+
+This tool analyzes test failures and provides:
+
+1. **Root Cause Analysis** - Why did the test fail?
+2. **Suggested Fixes** - How to fix it
+3. **Code Examples** - Specific code changes needed
+4. **Validation Steps** - How to verify the fix
+5. **Priority & Effort** - How urgent and how much work
+
+---
+
+## 📚 Documentation
+
+| Document | Description | When to Use |
+|----------|-------------|-------------|
+| **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** | Copy-paste commands | **Start here!** |
+| **[USAGE.md](USAGE.md)** | Complete usage guide | Detailed examples |
+| **[JENKINS_SETUP.md](JENKINS_SETUP.md)** | CI/CD setup | Jenkins/Kubernetes |
+| **[RUNBOOK_USAGE.md](RUNBOOK_USAGE.md)** | Runbook (if exists) | Operational guide |
+
+---
+
+## 🎯 Common Use Cases
+
+### For CI/CD (Jenkins, GitLab, GitHub Actions)
+```bash
+python3 analyze_and_suggest_fixes.py input.json \
+    --model llama3.2 \
+    --output results.json \
+    --yes --skip-verify
+```
+
+### For Local Development
+```bash
+python3 analyze_and_suggest_fixes.py input.json \
+    --model llama3.2 \
+    --output results.json
+```
+
+### Quick Test (1 test only)
+```bash
+python3 analyze_and_suggest_fixes.py input.json \
+    --model llama3.2 --limit 1 \
+    --output test.json --yes --skip-verify
+```
+
+### Analysis Only (2x faster)
+```bash
+python3 analyze_and_suggest_fixes.py input.json \
+    --model llama3.2 --analyze-only \
+    --output analysis.json --yes --skip-verify
+```
+
+---
+
+## 📦 Prerequisites
+
+### 1. Install Ollama
+```bash
+# Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Mac
+brew install ollama
+
+# Or download from https://ollama.com/download
+```
+
+### 2. Install Python Package
+```bash
+pip3 install ollama
+```
+
+### 3. Pull Model
+```bash
+ollama pull llama3.2
+```
+
+---
+
+## 🔧 Available Scripts
+
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `analyze_and_suggest_fixes.py` | **Main script** - Full analysis + fixes | ⭐ Recommended |
+| `analyze_failures.py` | Analysis only module | Can be imported |
+| `fix_suggestor.py` | Fix suggestion module | Can be imported |
+| `debug_ollama.py` | Diagnostic tool | Run first to test |
+| `test_ollama.py` | Quick connection test | Troubleshooting |
+| `optimize_ollama.sh` | Optimization script | CI/CD setup |
+
+---
+
+## 📊 Model Selection
+
+| Model | Size | Memory | Speed | Best For |
+|-------|------|--------|-------|----------|
+| **llama3.2** ⭐ | 1.88 GB | ~2 GB | Medium | **CI/CD, Limited RAM** |
+| llama3.1 | 4.58 GB | ~5 GB | Fast | Local, 8GB+ RAM |
+| llama3 | 4.34 GB | ~5 GB | Medium | Alternative |
+
+**Recommendation:** Use `llama3.2` for reliability and compatibility.
+
+**Your Jenkins Setup (8Gi memory):** ✅ Use `llama3.2`
+
+---
+
+## 🛠️ Command-Line Options
 
 ```bash
-# Analyze test failures with fix suggestions
-python analyze_and_suggest_fixes.py test_results.json
+python3 analyze_and_suggest_fixes.py INPUT_FILE [OPTIONS]
 
-# Analysis only (skip fix suggestions)
-python analyze_and_suggest_fixes.py test_results.json --analysis-only
+Required:
+  INPUT_FILE              JSON file with test failures
 
-# Custom output file with parallel processing
-python analyze_and_suggest_fixes.py input.json --output results.json
+Key Options:
+  --model MODEL           Ollama model (default: llama3.1)
+  --output FILE           Output file (default: analysis_and_fixes.json)
+  --yes, -y              Skip prompts (for CI/CD)
+  --skip-verify          Skip connection check
+  --limit N              Process only N tests
+  --analyze-only         Skip fix suggestions (2x faster)
+  --timeout SECONDS      Timeout per API call (default: 60)
+  --framework NAME       Test framework (pytest, jest, cypress)
 
-# Sequential processing with limited failures
-python analyze_and_suggest_fixes.py input.json --no-parallel --max-failures 5
+See USAGE.md for all options
 ```
 
-### Input Format
+---
 
-The framework accepts various JSON formats:
+## 📥 Input Format
 
-**Direct Array**:
+The script accepts JSON files in various formats:
+
+### Simple Array
 ```json
 [
   {
-    "name": "test_user_authentication",
-    "status": "failed",
+    "name": "test_login",
     "failure_message": "AssertionError: Expected 200, got 401",
     "framework": "pytest"
   }
 ]
 ```
 
-**Nested Object**:
+### Nested Object
 ```json
 {
-  "test_results": [
+  "tests": [
     {
-      "test_name": "test_database_connection",
-      "failure_message": "Connection refused",
-      "framework": "pytest"
+      "test_name": "test_login",
+      "error": "Timeout after 30s"
     }
   ]
 }
 ```
 
-## 📊 Output Format
+See [USAGE.md](USAGE.md) for more examples.
 
-The framework generates comprehensive JSON reports:
+---
+
+## 📤 Output Format
 
 ```json
 {
   "metadata": {
-    "generated_at": "2025-01-09T...",
+    "generated_at": "2026-04-15T10:30:00",
+    "model": "llama3.2",
     "total_tests": 10,
-    "failed_tests": 3,
-    "successful_analyses": 2,
-    "successful_fixes": 2,
-    "processing_mode": "analysis_and_fixes"
+    "successful_analyses": 9,
+    "fix_summary": {
+      "successful_fixes": 8,
+      "fix_type_distribution": {...},
+      "priority_distribution": {...}
+    }
   },
-  "statistics": {
-    "processing_time_seconds": 45.2,
-    "analysis_success_rate": 0.67,
-    "fix_success_rate": 0.67,
-    "average_confidence": 0.85
-  },
-  "test_results": [
+  "results": [
     {
       "test_name": "test_login",
-      "framework": "pytest",
-      "original_test": { /* original test data */ },
       "analysis": {
-        "success": true,
         "root_cause": "Authentication token validation failure",
         "suggested_fix": "Update token validation logic",
-        "confidence_score": 0.8,
+        "confidence_score": 0.85,
         "error_category": "authentication",
         "severity": "high"
       },
       "fix_suggestion": {
-        "success": true,
         "fix_type": "quick_fix",
         "priority": "high",
-        "estimated_effort": "minutes",
-        "code_changes": "/* specific code fixes */",
-        "validation_steps": ["step1", "step2"],
-        "prevention": "prevention strategies"
+        "code_changes": "...",
+        "validation_steps": [...]
       }
     }
   ]
 }
 ```
 
-## 🛠️ Advanced Usage
-
-### Parallel Processing
-
-```bash
-# Use 5 parallel workers
-python analyze_and_suggest_fixes.py input.json --max-workers 5
-
-# Disable parallel processing
-python analyze_and_suggest_fixes.py input.json --no-parallel
-```
-
-### Framework-Specific Analysis
-
-```bash
-# Apply framework to all tests
-python analyze_and_suggest_fixes.py input.json --framework cypress
-
-# Framework can also be specified per test in JSON
-```
-
-### Error Handling
-
-```bash
-# Increase timeout for complex analysis
-python analyze_and_suggest_fixes.py input.json --timeout 180
-
-# Limit processing for testing
-python analyze_and_suggest_fixes.py input.json --max-failures 3
-```
-
-### Sample Data Generation
-
-```bash
-# Create sample test failures for testing
-python analyze_and_suggest_fixes.py --sample
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-```bash
-# Optional: Configure Claude CLI settings
-export CLAUDE_API_KEY="your_api_key"
-export CLAUDE_TIMEOUT="120"
-```
-
-### Command Line Options
-
-```bash
-python analyze_and_suggest_fixes.py --help
-```
-
-**Available Options**:
-- `--output, -o`: Output file path
-- `--framework`: Framework to apply to all tests
-- `--max-failures`: Limit number of failures to process
-- `--timeout`: Claude CLI timeout (default: 120s)
-- `--max-workers`: Parallel workers (default: 3)
-- `--no-parallel`: Disable parallel processing
-- `--analysis-only`: Skip fix suggestions
-- `--sample`: Create sample test file
-
-## 📈 Performance
-
-### Processing Speed
-- **Parallel Mode**: ~3 tests analyzed simultaneously
-- **Sequential Mode**: One test at a time
-- **Average Time**: 30-60 seconds per test analysis
-- **Timeout**: Configurable (default: 120 seconds)
-
-### Scalability
-- **Batch Processing**: Handles hundreds of test failures
-- **Memory Efficient**: Processes results incrementally
-- **Error Recovery**: Continues processing despite individual failures
-
-## 🎯 Error Categories
-
-The framework categorizes errors into:
-
-- **timeout**: Test execution timeouts
-- **assertion**: Assertion failures and unexpected values
-- **network**: Network connectivity issues
-- **configuration**: Configuration and setup problems
-- **dependency**: Missing or incompatible dependencies
-- **ui_interaction**: UI element interaction failures
-- **database**: Database connection and query issues
-- **authentication**: Authentication and authorization failures
-
-## 🏷️ Fix Types
-
-Generated fixes are classified as:
-
-- **quick_fix**: Simple code changes (minutes)
-- **refactor**: Code restructuring (hours)
-- **configuration**: Config file changes (minutes)
-- **dependency**: Package updates/additions (minutes)
-- **infrastructure**: Environment setup (hours/days)
-- **test_update**: Test code improvements (minutes/hours)
-
-## 🔍 Use Cases
-
-### Development Team
-- **Daily Standup**: Quick overview of test failures
-- **Sprint Planning**: Effort estimation for fixes
-- **Code Review**: Understanding failure patterns
-
-### QA Team
-- **Test Analysis**: Root cause identification
-- **Test Improvement**: Prevention strategies
-- **Automation**: Automated failure triage
-
-### DevOps Team
-- **CI/CD Pipeline**: Automated failure analysis
-- **Infrastructure Issues**: Environment-related failures
-- **Monitoring**: Trend analysis and reporting
-
-## 🛡️ Error Handling
-
-### Graceful Degradation
-- Continues processing if individual tests fail
-- Provides partial results for successful analyses
-- Detailed error reporting and logging
-
-### Timeout Management
-- Configurable timeouts per analysis
-- Automatic retry logic for transient failures
-- Progress tracking for long-running operations
-
-### Validation
-- Input format validation
-- Output structure verification
-- Error message sanitization
-
-## 📚 Examples
-
-### Example 1: Basic Analysis
-
-```bash
-# Analyze failed tests from CI/CD pipeline
-python analyze_and_suggest_fixes.py ci_failures.json --output analysis_report.json
-```
-
-### Example 2: Framework-Specific Processing
-
-```bash
-# Process Cypress test failures
-python analyze_and_suggest_fixes.py cypress_failures.json --framework cypress --max-workers 2
-```
-
-### Example 3: Quick Triage
-
-```bash
-# Quick analysis of top 5 failures
-python analyze_and_suggest_fixes.py all_failures.json --max-failures 5 --analysis-only
-```
-
-### Example 4: Production Pipeline
-
-```bash
-# Full analysis with custom timeout
-python analyze_and_suggest_fixes.py prod_failures.json \
-  --output prod_analysis.json \
-  --timeout 180 \
-  --max-workers 5
-```
-
-## 🤝 Integration
-
-### CI/CD Integration
-
-```yaml
-# GitHub Actions example
-- name: Analyze Test Failures
-  run: |
-    python analyze_and_suggest_fixes.py test_failures.json --output analysis.json
-    # Upload analysis.json as artifact
-```
-
-### Slack Integration
-
-```python
-# Send analysis summary to Slack
-import json
-import requests
-
-with open('analysis.json') as f:
-    data = json.load(f)
-    
-summary = data['statistics']
-message = f"Test Analysis: {summary['successful_analyses']} analyses completed"
-# Send to Slack webhook
-```
+---
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+| Issue | Solution |
+|-------|----------|
+| "model requires more system memory" | Use `--model llama3.2` |
+| "EOFError: EOF when reading a line" | Add `--yes --skip-verify` |
+| Takes forever / hangs | Use `--model llama3.2` (not llama3.1) |
+| "model 'X' not found" | Run `ollama pull X` first |
+| Connection refused | Start Ollama: `ollama serve &` |
 
-1. **Claude CLI Not Found**
-   ```bash
-   # Ensure Claude CLI is in PATH
-   which claude
-   ```
-
-2. **Timeout Errors**
-   ```bash
-   # Increase timeout
-   python analyze_and_suggest_fixes.py input.json --timeout 300
-   ```
-
-3. **Memory Issues**
-   ```bash
-   # Reduce parallel workers
-   python analyze_and_suggest_fixes.py input.json --max-workers 1
-   ```
-
-4. **Invalid Input Format**
-   ```bash
-   # Validate JSON format
-   python -m json.tool input.json
-   ```
-
-### Debug Mode
+### Diagnostic Steps
 
 ```bash
-# Enable verbose logging
-export PYTHONPATH=/path/to/modules
-python -v analyze_and_suggest_fixes.py input.json
+# 1. Check Ollama is running
+curl localhost:11434/api/tags
+
+# 2. List installed models
+ollama list
+
+# 3. Run diagnostics
+python3 debug_ollama.py --model llama3.2 --num-tests 10
+
+# 4. Test with 1 test
+python3 analyze_and_suggest_fixes.py input.json --model llama3.2 --limit 1 --yes
 ```
+
+---
+
+## ⚡ Performance Tips
+
+1. **Use llama3.2** - Most reliable for CI/CD environments
+2. **Use --limit** - Test with fewer tests first (`--limit 3`)
+3. **Use --analyze-only** - Skip fix suggestions (2x faster)
+4. **Pre-pull models** - In Dockerfile or init stage
+5. **Set environment variables** - See [JENKINS_SETUP.md](JENKINS_SETUP.md)
+
+### Expected Performance (10 tests)
+
+| Configuration | Time | Speed |
+|---------------|------|-------|
+| llama3.2 (full) | 2-3 min | Normal |
+| llama3.2 (--analyze-only) | 1 min | 2x faster ⚡ |
+| llama3.1 (if memory allows) | 30 sec | 4x faster ⚡⚡ |
+
+---
+
+## 🎓 Examples
+
+### Example 1: CI/CD Pipeline (Jenkins)
+```bash
+#!/bin/bash
+set -e
+
+ollama serve &
+sleep 3
+ollama pull llama3.2
+
+python3 analyze_and_suggest_fixes.py \
+    tests_analysis/grc_failed_tests.json \
+    --model llama3.2 \
+    --output results.json \
+    --yes --skip-verify
+```
+
+### Example 2: Local Testing
+```bash
+# Test with 3 tests
+python3 analyze_and_suggest_fixes.py \
+    sample_failures.json \
+    --model llama3.2 \
+    --limit 3 \
+    --output test_results.json
+```
+
+### Example 3: Quick Analysis Only
+```bash
+# Skip fix suggestions, just analyze
+python3 analyze_and_suggest_fixes.py \
+    tests_analysis/grc_failed_tests.json \
+    --model llama3.2 \
+    --analyze-only \
+    --output analysis_only.json \
+    --yes --skip-verify
+```
+
+### Example 4: Kubernetes/Jenkins with 8Gi Memory
+```bash
+# Optimized for your setup
+export OLLAMA_NUM_PARALLEL=2
+export OLLAMA_MAX_LOADED_MODELS=1
+export OLLAMA_NUM_THREAD=4
+
+python3 analyze_and_suggest_fixes.py \
+    tests_analysis/grc_failed_tests.json \
+    --model llama3.2 \
+    --output tests_analysis/analysis_and_fixes.json \
+    --yes --skip-verify
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+analyze_and_suggest_fixes.py (Main CLI)
+    ↓
+    ├─→ analyze_failures.py (FailureAnalyzer class)
+    │       ↓
+    │       └─→ Ollama API → llama3.2 → Analysis
+    │
+    └─→ fix_suggestor.py (FixSuggestor class)
+            ↓
+            └─→ Ollama API → llama3.2 → Fix Suggestions
+```
+
+---
+
+## 🎯 Error Categories
+
+Errors are categorized as:
+
+- **timeout** - Test execution timeouts
+- **assertion** - Assertion failures
+- **network** - Network connectivity issues
+- **configuration** - Configuration problems
+- **dependency** - Missing dependencies
+- **ui_interaction** - UI element failures
+- **database** - Database issues
+- **authentication** - Auth failures
+
+---
+
+## 🏷️ Fix Types
+
+Fixes are classified as:
+
+- **quick_fix** - Simple changes (minutes)
+- **refactor** - Code restructuring (hours)
+- **configuration** - Config changes (minutes)
+- **dependency** - Package updates (minutes)
+- **infrastructure** - Environment setup (hours/days)
+- **test_update** - Test improvements (minutes/hours)
+
+---
+
+## 📦 Requirements
+
+```
+Python 3.7+
+ollama (pip package)
+Ollama service running
+```
+
+Install requirements:
+```bash
+pip3 install ollama
+# or
+pip3 install -r requirements.txt
+```
+
+---
+
+## 🤝 CI/CD Integration
+
+### Jenkins (Kubernetes)
+
+See [JENKINS_SETUP.md](JENKINS_SETUP.md) for complete setup.
+
+```groovy
+stage('Analyze Failures') {
+    steps {
+        sh '''
+            ollama serve &
+            sleep 3
+            ollama pull llama3.2
+            
+            python3 analyze_and_suggest_fixes.py \
+                tests_analysis/grc_failed_tests.json \
+                --model llama3.2 \
+                --output tests_analysis/results.json \
+                --yes --skip-verify
+        '''
+        archiveArtifacts 'tests_analysis/results.json'
+    }
+}
+```
+
+### GitLab CI
+```yaml
+test-analysis:
+  script:
+    - ollama serve &
+    - sleep 3
+    - ollama pull llama3.2
+    - python3 analyze_and_suggest_fixes.py input.json --model llama3.2 --yes --skip-verify
+  artifacts:
+    paths:
+      - analysis_and_fixes.json
+```
+
+### GitHub Actions
+```yaml
+- name: Analyze Test Failures
+  run: |
+    ollama serve &
+    sleep 3
+    ollama pull llama3.2
+    python3 analyze_and_suggest_fixes.py input.json --model llama3.2 --yes --skip-verify
+```
+
+---
+
+## ✅ Success Checklist
+
+Before running in production:
+
+- [ ] Ollama is installed (`which ollama`)
+- [ ] Ollama is running (`curl localhost:11434/api/tags`)
+- [ ] llama3.2 is pulled (`ollama list | grep llama3.2`)
+- [ ] Diagnostics pass (`python3 debug_ollama.py --model llama3.2`)
+- [ ] Test run with --limit 1 works
+- [ ] CI/CD pipeline includes `--yes --skip-verify`
+
+---
+
+## 📞 Support
+
+- 📖 [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Common commands
+- 📖 [USAGE.md](USAGE.md) - Detailed examples
+- 📖 [JENKINS_SETUP.md](JENKINS_SETUP.md) - CI/CD setup
+- 🔍 `python3 debug_ollama.py` - Diagnostics
+
+---
 
 ## 📄 License
 
-This project is provided as-is for educational and development purposes.
+MIT License (or your license here)
 
-## 🤖 AI Integration
+---
 
-This framework leverages Claude AI for:
-- Natural language processing of error messages
-- Pattern recognition in test failures
-- Code generation for fixes
-- Best practice recommendations
+**Ready to go?** 🚀
 
-The quality of analysis depends on:
-- Clear error messages in test results
-- Sufficient context in failure descriptions
-- Proper framework identification
-- Network connectivity to Claude AI services
+```bash
+python3 analyze_and_suggest_fixes.py \
+    tests_analysis/grc_failed_tests.json \
+    --model llama3.2 \
+    --output tests_analysis/analysis_and_fixes.json \
+    --yes --skip-verify
+```
 
-
-## Claude recommendation
-
-Keep your current direct CLI approach for the main workflow because:
-- It works well for your batch processing needs
-- Performance is excellent for processing many failures
-- Output is predictable and structured
-- Easy to integrate into CI/CD pipelines
-
-Consider adding subagent enhancement for:
-- High-priority failures (critical/high severity)
-- Low-confidence analyses (< 0.6 confidence score)
-- Complex multi-component test failures
-- When you need code context or research
+For more commands, see [QUICK_REFERENCE.md](QUICK_REFERENCE.md)!
