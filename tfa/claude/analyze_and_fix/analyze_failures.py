@@ -35,7 +35,7 @@ class FailureAnalyzer:
             prompt_file = os.path.join(
                 os.path.dirname(__file__),
                 "prompts",
-                "analysis_prompt.txt"
+                "analysis_prompt_openshift_acm.txt"
             )
 
         self.prompt_template = self._load_prompt_template(prompt_file)
