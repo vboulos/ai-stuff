@@ -1,0 +1,438 @@
+{
+  "metadata": {
+    "generated_at": "2025-11-15T09:22:20.157662",
+    "input_file": "grc_failed_tests.json",
+    "processing_mode": "analysis_and_fixes",
+    "total_tests_in_input": 10,
+    "failed_tests_found": 10,
+    "tests_processed": 10,
+    "claude_timeout": 300,
+    "max_workers": 3
+  },
+  "statistics": {
+    "processing_time_seconds": 57274.25,
+    "total_processed": 10,
+    "successful_analyses": 7,
+    "failed_analyses": 3,
+    "analysis_success_rate": 0.7,
+    "successful_fixes": 7,
+    "failed_fixes": 3,
+    "fix_success_rate": 0.7,
+    "fix_summary": {
+      "total_fixes": 10,
+      "successful_fixes": 7,
+      "failed_fixes": 3,
+      "success_rate": 0.7,
+      "fix_type_distribution": {
+        "quick_fix": 7
+      },
+      "priority_distribution": {
+        "high": 7
+      },
+      "effort_distribution": {
+        "hours": 7
+      }
+    },
+    "average_confidence": 0.81
+  },
+  "test_results": [
+    {
+      "test_name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+        "status": "failed",
+        "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'",
+        "framework": "junit",
+        "class_name": "RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Test export CSV functionality in GRC pages"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test is failing due to a missing space character in the displayed text. The expected text contains \" Creates a velero Schedule\" (with a space before \"Creates\"), but the actual text shows \"Creates a velero Schedule\" (without the leading space). This suggests either a formatting/rendering issue in the UI where text concatenation is removing spaces, or the source data has lost the space character.",
+        "suggested_fix": "1. Check the source data/template that generates this description text to ensure proper spacing\n2. If using string concatenation in the UI code, verify that spaces are properly preserved between text segments\n3. Update the test assertion to match the actual correct format, or fix the UI rendering to include the missing space",
+        "code_example": "```javascript\n// If this is a template/rendering issue, ensure proper spacing:\nconst description = `${baseText} Creates a velero Schedule...`; // Note the space before \"Creates\"\n\n// Or in the test, if the UI is correct without space:\ncy.get('dd.pf-v5-c-description-list__description')\n  .should('contain.text', 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...')\n```",
+        "confidence_score": 0.9,
+        "error_category": "assertion",
+        "severity": "low",
+        "raw_response": "**ROOT CAUSE:**\nThe test is failing due to a missing space character in the displayed text. The expected text contains \" Creates a velero Schedule\" (with a space before \"Creates\"), but the actual text shows \"Creates a velero Schedule\" (without the leading space). This suggests either a formatting/rendering issue in the UI where text concatenation is removing spaces, or the source data has lost the space character.\n\n**SUGGESTED FIX:**\n1. Check the source data/template that generates this description text to ensure proper spacing\n2. If using string concatenation in the UI code, verify that spaces are properly preserved between text segments\n3. Update the test assertion to match the actual correct format, or fix the UI rendering to include the missing space\n\n**CODE EXAMPLE:**\n```javascript\n// If this is a template/rendering issue, ensure proper spacing:\nconst description = `${baseText} Creates a velero Schedule...`; // Note the space before \"Creates\"\n\n// Or in the test, if the UI is correct without space:\ncy.get('dd.pf-v5-c-description-list__description')\n  .should('contain.text', 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...')\n```\n\n**CONFIDENCE:**\n0.9\n\n**ERROR_CATEGORY:**\nassertion\n\n**SEVERITY:**\nlow",
+        "analyzed_at": "2025-11-14T17:27:55.739222"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "hours",
+        "code_changes": "// Option 1: Fix in the UI component rendering the description\n// Look for text concatenation in policy description rendering\n// File likely: src/components/Policy/PolicyDetails.jsx or similar\n- description = policyText + additionalText\n+ description = policyText + ' ' + additionalText\n\n// Option 2: Fix in the data source/API response\n// File likely: src/api/policies.js or backend policy service\n// Ensure proper spacing in policy description field\n- description: baseDescription + supplementalText\n+ description: baseDescription + ' ' + supplementalText\n\n// Option 3: Fix in test data/mock\n// If using test fixtures, ensure proper spacing\n// File: cypress/fixtures/policies.json or test data file\n{\n-  \"description\": \"Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...\"\n+  \"description\": \"Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule...\"\n}",
+        "configuration_changes": "None needed",
+        "dependencies": "None needed",
+        "validation_steps": [
+          "Run the specific failing test: `npm test -- --grep \"GRC: Test export CSV functionality\"`",
+          "Verify policy description displays correctly in UI with proper spacing",
+          "Check CSV export contains properly formatted text with spaces",
+          "Run full GRC test suite to ensure no regressions"
+        ],
+        "prevention": "- Add linting rules for text concatenation requiring explicit space handling\n- Implement automated text formatting validation in CI/CD pipeline\n- Add unit tests specifically for text formatting in policy descriptions\n- Use template literals instead of string concatenation for better space control",
+        "impact_assessment": "- UI display of policy descriptions in GRC pages\n- CSV export functionality formatting\n- Potential similar issues in other policy-related text displays\n- User readability of policy information",
+        "rollback_plan": "- Revert the specific text formatting changes\n- Restore original string concatenation logic\n- Run regression tests to ensure system stability\n- Monitor for any related text display issues",
+        "raw_response": "**FIX_TYPE:**\nquick_fix\n\n**PRIORITY:**\nhigh\n\n**ESTIMATED_EFFORT:**\nhours\n\n**CODE_CHANGES:**\n```javascript\n// Option 1: Fix in the UI component rendering the description\n// Look for text concatenation in policy description rendering\n// File likely: src/components/Policy/PolicyDetails.jsx or similar\n- description = policyText + additionalText\n+ description = policyText + ' ' + additionalText\n\n// Option 2: Fix in the data source/API response\n// File likely: src/api/policies.js or backend policy service\n// Ensure proper spacing in policy description field\n- description: baseDescription + supplementalText\n+ description: baseDescription + ' ' + supplementalText\n\n// Option 3: Fix in test data/mock\n// If using test fixtures, ensure proper spacing\n// File: cypress/fixtures/policies.json or test data file\n{\n-  \"description\": \"Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule...\"\n+  \"description\": \"Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule...\"\n}\n```\n\n**CONFIGURATION_CHANGES:**\n```\nNone needed\n```\n\n**DEPENDENCIES:**\n```\nNone needed\n```\n\n**VALIDATION_STEPS:**\n1. Run the specific failing test: `npm test -- --grep \"GRC: Test export CSV functionality\"`\n2. Verify policy description displays correctly in UI with proper spacing\n3. Check CSV export contains properly formatted text with spaces\n4. Run full GRC test suite to ensure no regressions\n\n**PREVENTION:**\n- Add linting rules for text concatenation requiring explicit space handling\n- Implement automated text formatting validation in CI/CD pipeline\n- Add unit tests specifically for text formatting in policy descriptions\n- Use template literals instead of string concatenation for better space control\n\n**IMPACT_ASSESSMENT:**\n- UI display of policy descriptions in GRC pages\n- CSV export functionality formatting\n- Potential similar issues in other policy-related text displays\n- User readability of policy information\n\n**ROLLBACK_PLAN:**\n- Revert the specific text formatting changes\n- Restore original string concatenation logic\n- Run regression tests to ensure system stability\n- Monitor for any related text display issues",
+        "suggested_at": "2025-11-14T17:29:25.682947"
+      }
+    },
+    {
+      "test_name": "GRC: IamPolicy governance RHACM4K-1719: GRC: IamPolicy governance on a  Specifc cluster",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: IamPolicy governance RHACM4K-1719: GRC: IamPolicy governance on a  Specifc cluster",
+        "status": "failed",
+        "failure_message": "Timed out retrying",
+        "framework": "junit",
+        "class_name": "RHACM4K-1719: GRC: IamPolicy governance on a  Specifc cluster",
+        "execution_time": 0.0,
+        "suite_name": "GRC: IamPolicy governance"
+      },
+      "analysis": {
+        "success": false,
+        "root_cause": "",
+        "suggested_fix": "",
+        "code_example": "",
+        "confidence_score": 0.5,
+        "error_category": "unknown",
+        "severity": "medium",
+        "raw_response": "",
+        "error": "Failed to parse meaningful analysis from response",
+        "analyzed_at": "2025-11-14T17:28:34.618078"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "hours",
+        "code_changes": "// Increase timeout values and add retry logic\ndescribe('GRC: IamPolicy governance RHACM4K-1719', () => {\n  jest.setTimeout(300000); // Increase from default 5s to 5 minutes\n  \n  it('should govern IamPolicy on specific cluster', async () => {\n    const maxRetries = 3;\n    const retryDelay = 10000; // 10 seconds\n    \n    for (let attempt = 1; attempt <= maxRetries; attempt++) {\n      try {\n        // Add explicit waits for cluster readiness\n        await waitForClusterReady(specificCluster, 120000);\n        \n        // Apply IamPolicy with verification\n        await applyIamPolicy(policyConfig);\n        \n        // Wait for policy propagation with polling\n        await waitForPolicyPropagation(policyName, 180000);\n        \n        // Verify governance enforcement\n        const result = await verifyGovernanceEnforcement(specificCluster);\n        expect(result).toBeTruthy();\n        break; // Success, exit retry loop\n        \n      } catch (error) {\n        console.log(`Attempt ${attempt} failed: ${error.message}`);\n        if (attempt === maxRetries) throw error;\n        await new Promise(resolve => setTimeout(resolve, retryDelay));\n      }\n    }\n  });\n});\n\n// Helper function for robust waiting\nasync function waitForPolicyPropagation(policyName, timeout) {\n  const startTime = Date.now();\n  while (Date.now() - startTime < timeout) {\n    const status = await checkPolicyStatus(policyName);\n    if (status === 'enforced') return true;\n    await new Promise(resolve => setTimeout(resolve, 5000));\n  }\n  throw new Error(`Policy ${policyName} not propagated within ${timeout}ms`);\n}",
+        "configuration_changes": "# jest.config.js - Increase global test timeout\nmodule.exports = {\n  testTimeout: 300000, // 5 minutes for integration tests\n  setupFilesAfterEnv: ['<rootDir>/src/test-setup.js']\n};\n\n# test-setup.js - Add global retry configuration\njest.retryTimes(2, { logErrorsBeforeRetry: true });",
+        "dependencies": "None needed - uses existing Jest framework and test utilities",
+        "validation_steps": [
+          "Run the specific test in isolation to verify timeout fix",
+          "Execute test against multiple cluster environments",
+          "Validate policy propagation timing across different cluster loads",
+          "Confirm test passes consistently in CI/CD pipeline runs"
+        ],
+        "prevention": "- Implement cluster health checks before running governance tests\n- Add monitoring for policy propagation delays in test environments\n- Create separate test suites for quick unit tests vs longer integration tests\n- Set up cluster-specific timeout configurations based on performance characteristics",
+        "impact_assessment": "- Test execution time will increase but reliability improves\n- Other IamPolicy governance tests may benefit from similar timeout adjustments\n- CI/CD pipeline duration may increase slightly but with fewer flaky test failures\n- No impact on production code, only test infrastructure",
+        "rollback_plan": "1. Revert jest.config.js timeout changes to original values\n2. Remove retry logic from test implementation\n3. Restore original test without enhanced waiting mechanisms\n4. Monitor for return of timeout failures and investigate alternative solutions",
+        "raw_response": "**FIX_TYPE:**\nquick_fix\n\n**PRIORITY:**\nhigh\n\n**ESTIMATED_EFFORT:**\n2-4 hours\n\n**CODE_CHANGES:**\n```javascript\n// Increase timeout values and add retry logic\ndescribe('GRC: IamPolicy governance RHACM4K-1719', () => {\n  jest.setTimeout(300000); // Increase from default 5s to 5 minutes\n  \n  it('should govern IamPolicy on specific cluster', async () => {\n    const maxRetries = 3;\n    const retryDelay = 10000; // 10 seconds\n    \n    for (let attempt = 1; attempt <= maxRetries; attempt++) {\n      try {\n        // Add explicit waits for cluster readiness\n        await waitForClusterReady(specificCluster, 120000);\n        \n        // Apply IamPolicy with verification\n        await applyIamPolicy(policyConfig);\n        \n        // Wait for policy propagation with polling\n        await waitForPolicyPropagation(policyName, 180000);\n        \n        // Verify governance enforcement\n        const result = await verifyGovernanceEnforcement(specificCluster);\n        expect(result).toBeTruthy();\n        break; // Success, exit retry loop\n        \n      } catch (error) {\n        console.log(`Attempt ${attempt} failed: ${error.message}`);\n        if (attempt === maxRetries) throw error;\n        await new Promise(resolve => setTimeout(resolve, retryDelay));\n      }\n    }\n  });\n});\n\n// Helper function for robust waiting\nasync function waitForPolicyPropagation(policyName, timeout) {\n  const startTime = Date.now();\n  while (Date.now() - startTime < timeout) {\n    const status = await checkPolicyStatus(policyName);\n    if (status === 'enforced') return true;\n    await new Promise(resolve => setTimeout(resolve, 5000));\n  }\n  throw new Error(`Policy ${policyName} not propagated within ${timeout}ms`);\n}\n```\n\n**CONFIGURATION_CHANGES:**\n```\n# jest.config.js - Increase global test timeout\nmodule.exports = {\n  testTimeout: 300000, // 5 minutes for integration tests\n  setupFilesAfterEnv: ['<rootDir>/src/test-setup.js']\n};\n\n# test-setup.js - Add global retry configuration\njest.retryTimes(2, { logErrorsBeforeRetry: true });\n```\n\n**DEPENDENCIES:**\n```\nNone needed - uses existing Jest framework and test utilities\n```\n\n**VALIDATION_STEPS:**\n1. Run the specific test in isolation to verify timeout fix\n2. Execute test against multiple cluster environments \n3. Validate policy propagation timing across different cluster loads\n4. Confirm test passes consistently in CI/CD pipeline runs\n\n**PREVENTION:**\n- Implement cluster health checks before running governance tests\n- Add monitoring for policy propagation delays in test environments\n- Create separate test suites for quick unit tests vs longer integration tests\n- Set up cluster-specific timeout configurations based on performance characteristics\n\n**IMPACT_ASSESSMENT:**\n- Test execution time will increase but reliability improves\n- Other IamPolicy governance tests may benefit from similar timeout adjustments\n- CI/CD pipeline duration may increase slightly but with fewer flaky test failures\n- No impact on production code, only test infrastructure\n\n**ROLLBACK_PLAN:**\n1. Revert jest.config.js timeout changes to original values\n2. Remove retry logic from test implementation\n3. Restore original test without enhanced waiting mechanisms\n4. Monitor for return of timeout failures and investigate alternative solutions",
+        "suggested_at": "2025-11-14T17:29:30.072417"
+      }
+    },
+    {
+      "test_name": "GRC: Donut chart for configuration policy in discovered policies - ACM-13337  \"before all\" hook for \"RHACM4K-52432: GRC: UI: Donut Card for Configuration policy in DiscoveredByCluster page \"",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Donut chart for configuration policy in discovered policies - ACM-13337  \"before all\" hook for \"RHACM4K-52432: GRC: UI: Donut Card for Configuration policy in DiscoveredByCluster page \"",
+        "status": "failed",
+        "failure_message": "Timed out retrying  Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Donut chart for config...`",
+        "framework": "junit",
+        "class_name": "\"before all\" hook for \"RHACM4K-52432: GRC: UI: Donut Card for Configuration policy in DiscoveredByCluster page \"",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Donut chart for configuration policy in discovered policies - ACM-13337 "
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test is failing due to a timeout in the \"before all\" hook that runs before the donut chart configuration policy test. This suggests that the test setup/initialization phase is taking longer than the configured timeout period to complete. The hook is likely waiting for UI elements to load, API calls to complete, or test data to be set up for the GRC (Governance Risk Compliance) donut chart component.",
+        "suggested_fix": "1. Increase the timeout value for the \"before all\" hook to allow more time for initialization\n2. Optimize the setup code to reduce execution time by parallelizing operations or using more efficient selectors\n3. Add explicit waits for specific elements/conditions rather than relying on implicit timeouts\n4. Implement retry logic for flaky network operations in the setup phase",
+        "code_example": "```javascript\n// Increase timeout for the hook\nbefore(function() {\n  this.timeout(60000); // Increase from default to 60 seconds\n  \n  // Add explicit waits for elements\n  cy.visit('/discovered-policies');\n  cy.get('[data-testid=\"donut-chart\"]', { timeout: 30000 }).should('be.visible');\n  cy.get('[data-testid=\"configuration-policy\"]', { timeout: 20000 }).should('exist');\n});\n\n// Or use beforeEach with proper cleanup\nbeforeEach(() => {\n  cy.intercept('GET', '/api/policies/discovered*').as('getPolicies');\n  cy.visit('/discovered-policies');\n  cy.wait('@getPolicies', { timeout: 30000 });\n});\n```",
+        "confidence_score": 0.8,
+        "error_category": "timeout",
+        "severity": "medium",
+        "raw_response": "**ROOT CAUSE:**\nThe test is failing due to a timeout in the \"before all\" hook that runs before the donut chart configuration policy test. This suggests that the test setup/initialization phase is taking longer than the configured timeout period to complete. The hook is likely waiting for UI elements to load, API calls to complete, or test data to be set up for the GRC (Governance Risk Compliance) donut chart component.\n\n**SUGGESTED FIX:**\n1. Increase the timeout value for the \"before all\" hook to allow more time for initialization\n2. Optimize the setup code to reduce execution time by parallelizing operations or using more efficient selectors\n3. Add explicit waits for specific elements/conditions rather than relying on implicit timeouts\n4. Implement retry logic for flaky network operations in the setup phase\n\n**CODE EXAMPLE:**\n```javascript\n// Increase timeout for the hook\nbefore(function() {\n  this.timeout(60000); // Increase from default to 60 seconds\n  \n  // Add explicit waits for elements\n  cy.visit('/discovered-policies');\n  cy.get('[data-testid=\"donut-chart\"]', { timeout: 30000 }).should('be.visible');\n  cy.get('[data-testid=\"configuration-policy\"]', { timeout: 20000 }).should('exist');\n});\n\n// Or use beforeEach with proper cleanup\nbeforeEach(() => {\n  cy.intercept('GET', '/api/policies/discovered*').as('getPolicies');\n  cy.visit('/discovered-policies');\n  cy.wait('@getPolicies', { timeout: 30000 });\n});\n```\n\n**CONFIDENCE:**\n0.8\n\n**ERROR_CATEGORY:**\ntimeout\n\n**SEVERITY:**\nmedium",
+        "analyzed_at": "2025-11-14T17:27:55.772740"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "hours",
+        "code_changes": "// In the test file (likely cypress/e2e/grc/donut-chart-config-policy.spec.js)\ndescribe('GRC: Donut chart for configuration policy in discovered policies - ACM-13337', () => {\n  before(function() {\n    // Increase timeout for this specific hook\n    this.timeout(60000); // 60 seconds instead of default\n    \n    // Add explicit waits for critical elements\n    cy.visit('/multicloud/governance/policies');\n    cy.wait('@getPolicies', { timeout: 30000 }); // Wait for API call\n    \n    // Wait for donut chart container to be ready\n    cy.get('[data-testid=\"donut-chart-container\"]', { timeout: 30000 })\n      .should('be.visible');\n    \n    // Ensure configuration policies are loaded\n    cy.get('[data-testid=\"configuration-policy-item\"]', { timeout: 20000 })\n      .should('have.length.greaterThan', 0);\n  });\n});\n\n// Alternative: Split the before hook into smaller, more specific hooks\nbeforeEach(() => {\n  // Setup that needs to run before each test\n  cy.intercept('GET', '**/api/v1/policies*', { fixture: 'policies.json' }).as('getPolicies');\n});\n\nbefore(() => {\n  // One-time setup only\n  cy.login(); // Assuming login helper exists\n  cy.setupTestData(); // Setup minimal test data\n});",
+        "configuration_changes": "// In cypress.config.js or cypress.json\n{\n  \"defaultCommandTimeout\": 30000,\n  \"requestTimeout\": 30000,\n  \"responseTimeout\": 30000,\n  \"pageLoadTimeout\": 60000,\n  \"env\": {\n    \"grcTestTimeout\": 60000\n  }\n}",
+        "dependencies": "// Ensure test fixtures exist:\n// - cypress/fixtures/policies.json\n// - cypress/fixtures/donut-chart-data.json\n// \n// Verify test helper commands:\n// - cy.login()\n// - cy.setupTestData()\n// - cy.waitForGRCPageLoad()",
+        "validation_steps": [
+          "Run the specific failing test in isolation to verify timeout fix",
+          "Execute the full GRC test suite to ensure no regression",
+          "Verify donut chart renders correctly with test data in different browsers",
+          "Confirm API interceptors are working and returning expected data",
+          "Test with slow network conditions to validate timeout values"
+        ],
+        "prevention": "- Implement proper API mocking/stubbing to reduce dependency on backend response times\n- Add retry logic for flaky elements with `cy.get().should()` assertions\n- Use more specific selectors and data-testid attributes for reliable element targeting\n- Establish baseline performance metrics for GRC page load times\n- Add monitoring for test execution times to catch timeout issues early",
+        "impact_assessment": "- Affects GRC donut chart functionality testing\n- May impact CI/CD pipeline if test suite reliability improves\n- Could reveal underlying performance issues in GRC page load\n- Other GRC-related tests may benefit from similar timeout adjustments",
+        "rollback_plan": "1. Revert timeout configuration changes in cypress.config.js\n2. Remove additional waits and restore original before hook\n3. Re-enable original test structure if split hooks cause issues\n4. Monitor test execution times after rollback to identify alternative solutions",
+        "raw_response": "**FIX_TYPE:**\nquick_fix\n\n**PRIORITY:**\nhigh\n\n**ESTIMATED_EFFORT:**\n2-4 hours\n\n**CODE_CHANGES:**\n```javascript\n// In the test file (likely cypress/e2e/grc/donut-chart-config-policy.spec.js)\ndescribe('GRC: Donut chart for configuration policy in discovered policies - ACM-13337', () => {\n  before(function() {\n    // Increase timeout for this specific hook\n    this.timeout(60000); // 60 seconds instead of default\n    \n    // Add explicit waits for critical elements\n    cy.visit('/multicloud/governance/policies');\n    cy.wait('@getPolicies', { timeout: 30000 }); // Wait for API call\n    \n    // Wait for donut chart container to be ready\n    cy.get('[data-testid=\"donut-chart-container\"]', { timeout: 30000 })\n      .should('be.visible');\n    \n    // Ensure configuration policies are loaded\n    cy.get('[data-testid=\"configuration-policy-item\"]', { timeout: 20000 })\n      .should('have.length.greaterThan', 0);\n  });\n});\n\n// Alternative: Split the before hook into smaller, more specific hooks\nbeforeEach(() => {\n  // Setup that needs to run before each test\n  cy.intercept('GET', '**/api/v1/policies*', { fixture: 'policies.json' }).as('getPolicies');\n});\n\nbefore(() => {\n  // One-time setup only\n  cy.login(); // Assuming login helper exists\n  cy.setupTestData(); // Setup minimal test data\n});\n```\n\n**CONFIGURATION_CHANGES:**\n```javascript\n// In cypress.config.js or cypress.json\n{\n  \"defaultCommandTimeout\": 30000,\n  \"requestTimeout\": 30000,\n  \"responseTimeout\": 30000,\n  \"pageLoadTimeout\": 60000,\n  \"env\": {\n    \"grcTestTimeout\": 60000\n  }\n}\n```\n\n**DEPENDENCIES:**\n```\n// Ensure test fixtures exist:\n// - cypress/fixtures/policies.json\n// - cypress/fixtures/donut-chart-data.json\n// \n// Verify test helper commands:\n// - cy.login()\n// - cy.setupTestData()\n// - cy.waitForGRCPageLoad()\n```\n\n**VALIDATION_STEPS:**\n1. Run the specific failing test in isolation to verify timeout fix\n2. Execute the full GRC test suite to ensure no regression\n3. Verify donut chart renders correctly with test data in different browsers\n4. Confirm API interceptors are working and returning expected data\n5. Test with slow network conditions to validate timeout values\n\n**PREVENTION:**\n- Implement proper API mocking/stubbing to reduce dependency on backend response times\n- Add retry logic for flaky elements with `cy.get().should()` assertions\n- Use more specific selectors and data-testid attributes for reliable element targeting\n- Establish baseline performance metrics for GRC page load times\n- Add monitoring for test execution times to catch timeout issues early\n\n**IMPACT_ASSESSMENT:**\n- Affects GRC donut chart functionality testing\n- May impact CI/CD pipeline if test suite reliability improves\n- Could reveal underlying performance issues in GRC page load\n- Other GRC-related tests may benefit from similar timeout adjustments\n\n**ROLLBACK_PLAN:**\n1. Revert timeout configuration changes in cypress.config.js\n2. Remove additional waits and restore original before hook\n3. Re-enable original test structure if split hooks cause issues\n4. Monitor test execution times after rollback to identify alternative solutions",
+        "suggested_at": "2025-11-14T17:29:30.866370"
+      }
+    },
+    {
+      "test_name": "GRC: Pod policy governance  RHACM4K-1724:GRC: Pod policy governance",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Pod policy governance  RHACM4K-1724:GRC: Pod policy governance",
+        "status": "failed",
+        "failure_message": "Timed out retrying",
+        "framework": "junit",
+        "class_name": "RHACM4K-1724:GRC: Pod policy governance",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Pod policy governance "
+      },
+      "analysis": {
+        "success": false,
+        "root_cause": "",
+        "suggested_fix": "",
+        "code_example": "",
+        "confidence_score": 0.5,
+        "error_category": "unknown",
+        "severity": "medium",
+        "raw_response": "",
+        "error": "Failed to parse meaningful analysis from response",
+        "analyzed_at": "2025-11-14T17:28:35.465041"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "hours",
+        "code_changes": "// Increase timeout values and add retry logic\ndescribe('GRC: Pod policy governance RHACM4K-1724', () => {\n  it('should enforce pod policy governance', { timeout: 120000 }, () => {\n    // Add explicit waits for policy propagation\n    cy.wait(10000); // Wait for policy to propagate\n    \n    // Use retry logic for flaky elements\n    cy.get('[data-testid=\"policy-status\"]', { timeout: 60000 })\n      .should('be.visible')\n      .and('contain', 'Compliant');\n    \n    // Add polling mechanism for async operations\n    cy.waitUntil(() => \n      cy.get('[data-testid=\"pod-compliance\"]')\n        .then($el => $el.text().includes('Enforced')),\n      { timeout: 90000, interval: 5000 }\n    );\n  });\n});",
+        "configuration_changes": "# cypress.config.js - increase global timeouts\ndefaultCommandTimeout: 30000\nrequestTimeout: 20000\nresponseTimeout: 30000\npageLoadTimeout: 60000\n\n# Add retry configuration\nretries: {\n  runMode: 2,\n  openMode: 1\n}",
+        "dependencies": "cypress-wait-until (if not already installed)\nnpm install --save-dev cypress-wait-until",
+        "validation_steps": [
+          "Run the specific test in isolation to verify timeout fix",
+          "Execute the full GRC test suite to ensure no regressions",
+          "Monitor test execution time to confirm it completes within new timeout bounds"
+        ],
+        "prevention": "- Implement proper wait strategies using cy.intercept() to wait for specific API calls\n- Add data-testid attributes to critical elements for more reliable selectors\n- Create custom commands for common wait patterns in GRC tests\n- Set up test environment with consistent timing",
+        "impact_assessment": "- Affects GRC policy governance test suite\n- May impact CI/CD pipeline execution time\n- Could reveal underlying performance issues in RHACM policy engine",
+        "rollback_plan": "1. Revert timeout configuration changes in cypress.config.js\n2. Remove retry logic and waitUntil commands from test code\n3. Restore original test structure if new approach fails\n4. Investigate underlying infrastructure issues if rollback is needed",
+        "raw_response": "**FIX_TYPE:**\nquick_fix\n\n**PRIORITY:**\nhigh\n\n**ESTIMATED_EFFORT:**\n2-4 hours\n\n**CODE_CHANGES:**\n```javascript\n// Increase timeout values and add retry logic\ndescribe('GRC: Pod policy governance RHACM4K-1724', () => {\n  it('should enforce pod policy governance', { timeout: 120000 }, () => {\n    // Add explicit waits for policy propagation\n    cy.wait(10000); // Wait for policy to propagate\n    \n    // Use retry logic for flaky elements\n    cy.get('[data-testid=\"policy-status\"]', { timeout: 60000 })\n      .should('be.visible')\n      .and('contain', 'Compliant');\n    \n    // Add polling mechanism for async operations\n    cy.waitUntil(() => \n      cy.get('[data-testid=\"pod-compliance\"]')\n        .then($el => $el.text().includes('Enforced')),\n      { timeout: 90000, interval: 5000 }\n    );\n  });\n});\n```\n\n**CONFIGURATION_CHANGES:**\n```yaml\n# cypress.config.js - increase global timeouts\ndefaultCommandTimeout: 30000\nrequestTimeout: 20000\nresponseTimeout: 30000\npageLoadTimeout: 60000\n\n# Add retry configuration\nretries: {\n  runMode: 2,\n  openMode: 1\n}\n```\n\n**DEPENDENCIES:**\n```\ncypress-wait-until (if not already installed)\nnpm install --save-dev cypress-wait-until\n```\n\n**VALIDATION_STEPS:**\n1. Run the specific test in isolation to verify timeout fix\n2. Execute the full GRC test suite to ensure no regressions\n3. Monitor test execution time to confirm it completes within new timeout bounds\n\n**PREVENTION:**\n- Implement proper wait strategies using cy.intercept() to wait for specific API calls\n- Add data-testid attributes to critical elements for more reliable selectors\n- Create custom commands for common wait patterns in GRC tests\n- Set up test environment with consistent timing\n\n**IMPACT_ASSESSMENT:**\n- Affects GRC policy governance test suite\n- May impact CI/CD pipeline execution time\n- Could reveal underlying performance issues in RHACM policy engine\n\n**ROLLBACK_PLAN:**\n1. Revert timeout configuration changes in cypress.config.js\n2. Remove retry logic and waitUntil commands from test code\n3. Restore original test structure if new approach fails\n4. Investigate underlying infrastructure issues if rollback is needed",
+        "suggested_at": "2025-11-15T00:58:57.663226"
+      }
+    },
+    {
+      "test_name": "GRC: Donut chart for certificate policy in discovered policies - ACM-13337 \"before all\" hook for \"RHACM4K-52786: GRC: UI: Donut Card for certificate policy in DiscoveredByCluster page \"",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Donut chart for certificate policy in discovered policies - ACM-13337 \"before all\" hook for \"RHACM4K-52786: GRC: UI: Donut Card for certificate policy in DiscoveredByCluster page \"",
+        "status": "failed",
+        "failure_message": "Timed out retrying  Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Donut chart for certif...`",
+        "framework": "junit",
+        "class_name": "\"before all\" hook for \"RHACM4K-52786: GRC: UI: Donut Card for certificate policy in DiscoveredByCluster page \"",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Donut chart for certificate policy in discovered policies - ACM-13337"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test is failing due to a timeout in the \"before all\" hook that runs before the main test case. This suggests that the setup phase - likely involving navigation to the GRC Donut chart page, waiting for UI elements to load, or establishing necessary test preconditions - is taking longer than the configured timeout threshold. The failure occurs before any actual test assertions can run.",
+        "suggested_fix": "Increase timeout values for the setup phase and add more robust wait conditions. Implement explicit waits for critical UI elements to be present and interactive before proceeding with the test. Consider breaking down the setup into smaller, more targeted steps with individual timeout handling.",
+        "code_example": "```javascript\n// In your test setup\nbeforeAll(async () => {\n  // Increase timeout for setup phase\n  jest.setTimeout(60000); // or whatever framework you're using\n  \n  // Navigate and wait for page load\n  await page.goto('/grc/discovered-policies');\n  \n  // Wait for specific elements to be ready\n  await page.waitForSelector('[data-testid=\"donut-chart\"]', { \n    timeout: 30000,\n    visible: true \n  });\n  \n  // Wait for data to load (if using API calls)\n  await page.waitForResponse(response => \n    response.url().includes('/api/policies') && \n    response.status() === 200\n  );\n  \n  // Additional stability wait\n  await page.waitForTimeout(1000);\n}, 60000); // Extended timeout for beforeAll\n```",
+        "confidence_score": 0.8,
+        "error_category": "timeout",
+        "severity": "medium",
+        "raw_response": "**ROOT CAUSE:**\nThe test is failing due to a timeout in the \"before all\" hook that runs before the main test case. This suggests that the setup phase - likely involving navigation to the GRC Donut chart page, waiting for UI elements to load, or establishing necessary test preconditions - is taking longer than the configured timeout threshold. The failure occurs before any actual test assertions can run.\n\n**SUGGESTED FIX:**\nIncrease timeout values for the setup phase and add more robust wait conditions. Implement explicit waits for critical UI elements to be present and interactive before proceeding with the test. Consider breaking down the setup into smaller, more targeted steps with individual timeout handling.\n\n**CODE EXAMPLE:**\n```javascript\n// In your test setup\nbeforeAll(async () => {\n  // Increase timeout for setup phase\n  jest.setTimeout(60000); // or whatever framework you're using\n  \n  // Navigate and wait for page load\n  await page.goto('/grc/discovered-policies');\n  \n  // Wait for specific elements to be ready\n  await page.waitForSelector('[data-testid=\"donut-chart\"]', { \n    timeout: 30000,\n    visible: true \n  });\n  \n  // Wait for data to load (if using API calls)\n  await page.waitForResponse(response => \n    response.url().includes('/api/policies') && \n    response.status() === 200\n  );\n  \n  // Additional stability wait\n  await page.waitForTimeout(1000);\n}, 60000); // Extended timeout for beforeAll\n```\n\n**CONFIDENCE:**\n0.8\n\n**ERROR_CATEGORY:**\ntimeout\n\n**SEVERITY:**\nmedium",
+        "analyzed_at": "2025-11-14T17:28:05.536215"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "hours",
+        "code_changes": "// In the test file (likely cypress/e2e/grc/donut-chart-certificate-policy.spec.js or similar)\ndescribe('GRC: Donut chart for certificate policy in discovered policies', () => {\n  before(() => {\n    // Increase timeout for the before hook specifically\n    cy.visit('/multicloud/policies/discovered', { timeout: 60000 });\n    \n    // Add explicit waits for page elements to load\n    cy.get('[data-testid=\"discovered-policies-page\"]', { timeout: 30000 }).should('be.visible');\n    cy.get('[data-testid=\"certificate-policy-donut\"]', { timeout: 30000 }).should('exist');\n    \n    // Wait for any API calls to complete\n    cy.intercept('GET', '**/api/v1/policies/discovered**').as('discoveredPolicies');\n    cy.wait('@discoveredPolicies', { timeout: 30000 });\n    \n    // Ensure donut chart data is loaded\n    cy.get('[data-testid=\"certificate-policy-donut\"] svg', { timeout: 20000 }).should('be.visible');\n  });\n  \n  it('RHACM4K-52786: GRC: UI: Donut Card for certificate policy in DiscoveredByCluster page', () => {\n    // Test implementation here\n  });\n});",
+        "configuration_changes": "// In cypress.config.js or cypress.json\n{\n  \"defaultCommandTimeout\": 30000,\n  \"requestTimeout\": 30000,\n  \"responseTimeout\": 30000,\n  \"pageLoadTimeout\": 60000\n}",
+        "dependencies": "None needed",
+        "validation_steps": [
+          "Run the specific test in isolation: `npm run cypress:run -- --spec \"cypress/e2e/grc/*certificate-policy*\"`",
+          "Verify the before hook completes without timeout",
+          "Confirm the donut chart renders properly in the test environment",
+          "Run the full GRC test suite to ensure no regressions"
+        ],
+        "prevention": "Add monitoring for page load performance in CI/CD pipeline, implement retry mechanisms for flaky network requests, and establish baseline performance metrics for critical UI components like the donut chart to catch performance degradation early.",
+        "impact_assessment": "This fix affects the GRC certificate policy test suite, specifically the discovered policies page testing. May slightly increase test execution time but will improve test reliability. No impact on production code.",
+        "rollback_plan": "Revert timeout configuration changes in cypress.config.js and remove the additional wait statements from the before hook. The original test structure can be restored by removing the explicit element waits and API intercepts.",
+        "raw_response": "**FIX_TYPE:**\nquick_fix\n\n**PRIORITY:**\nhigh\n\n**ESTIMATED_EFFORT:**\n2-4 hours\n\n**CODE_CHANGES:**\n```javascript\n// In the test file (likely cypress/e2e/grc/donut-chart-certificate-policy.spec.js or similar)\ndescribe('GRC: Donut chart for certificate policy in discovered policies', () => {\n  before(() => {\n    // Increase timeout for the before hook specifically\n    cy.visit('/multicloud/policies/discovered', { timeout: 60000 });\n    \n    // Add explicit waits for page elements to load\n    cy.get('[data-testid=\"discovered-policies-page\"]', { timeout: 30000 }).should('be.visible');\n    cy.get('[data-testid=\"certificate-policy-donut\"]', { timeout: 30000 }).should('exist');\n    \n    // Wait for any API calls to complete\n    cy.intercept('GET', '**/api/v1/policies/discovered**').as('discoveredPolicies');\n    cy.wait('@discoveredPolicies', { timeout: 30000 });\n    \n    // Ensure donut chart data is loaded\n    cy.get('[data-testid=\"certificate-policy-donut\"] svg', { timeout: 20000 }).should('be.visible');\n  });\n  \n  it('RHACM4K-52786: GRC: UI: Donut Card for certificate policy in DiscoveredByCluster page', () => {\n    // Test implementation here\n  });\n});\n```\n\n**CONFIGURATION_CHANGES:**\n```javascript\n// In cypress.config.js or cypress.json\n{\n  \"defaultCommandTimeout\": 30000,\n  \"requestTimeout\": 30000,\n  \"responseTimeout\": 30000,\n  \"pageLoadTimeout\": 60000\n}\n```\n\n**DEPENDENCIES:**\n```\nNone needed\n```\n\n**VALIDATION_STEPS:**\n1. Run the specific test in isolation: `npm run cypress:run -- --spec \"cypress/e2e/grc/*certificate-policy*\"`\n2. Verify the before hook completes without timeout\n3. Confirm the donut chart renders properly in the test environment\n4. Run the full GRC test suite to ensure no regressions\n\n**PREVENTION:**\nAdd monitoring for page load performance in CI/CD pipeline, implement retry mechanisms for flaky network requests, and establish baseline performance metrics for critical UI components like the donut chart to catch performance degradation early.\n\n**IMPACT_ASSESSMENT:**\nThis fix affects the GRC certificate policy test suite, specifically the discovered policies page testing. May slightly increase test execution time but will improve test reliability. No impact on production code.\n\n**ROLLBACK_PLAN:**\nRevert timeout configuration changes in cypress.config.js and remove the additional wait statements from the before hook. The original test structure can be restored by removing the explicit element waits and API intercepts.",
+        "suggested_at": "2025-11-14T17:59:09.843181"
+      }
+    },
+    {
+      "test_name": "GRC: Operator policy support - ACM-9287 RHACM4K-46007: GRC: Remove operator(spec.removalBehavior.operatorGroups: DeleteIfUnused) via operator policy using custom operator group and namespace(single sub used)",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Operator policy support - ACM-9287 RHACM4K-46007: GRC: Remove operator(spec.removalBehavior.operatorGroups: DeleteIfUnused) via operator policy using custom operator group and namespace(single sub used)",
+        "status": "failed",
+        "failure_message": "Timed out retrying",
+        "framework": "junit",
+        "class_name": "RHACM4K-46007: GRC: Remove operator(spec.removalBehavior.operatorGroups: DeleteIfUnused) via operator policy using custom operator group and namespace(single sub used)",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Operator policy support - ACM-9287"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test is failing due to a timeout while waiting for the operator removal process to complete. Specifically, the test is trying to remove an operator via operator policy with `spec.removalBehavior.operatorGroups: DeleteIfUnused` setting, but the cleanup operation is taking longer than the configured timeout period. This suggests either the operator deletion process is stuck, the custom operator group isn't being properly cleaned up, or there are dependencies preventing timely removal.",
+        "suggested_fix": "1. Increase the timeout value for operator removal operations\n2. Add better logging/monitoring to identify what specific step is blocking\n3. Implement retry logic with exponential backoff for operator deletion\n4. Verify that the custom operator group and namespace don't have lingering dependencies\n5. Add explicit cleanup of related resources before attempting operator removal",
+        "code_example": "```java\n// Increase timeout and add retry logic\n@Test\npublic void testOperatorRemoval() {\n    // Increase timeout from default (likely 60s) to 300s\n    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(300));\n    \n    // Add explicit cleanup steps\n    cleanupRelatedResources();\n    \n    // Trigger operator removal\n    removeOperatorViaPolicy();\n    \n    // Wait with better error reporting\n    wait.until(driver -> {\n        try {\n            return isOperatorFullyRemoved();\n        } catch (Exception e) {\n            log.debug(\"Operator still present: \" + e.getMessage());\n            return false;\n        }\n    });\n}\n```",
+        "confidence_score": 0.8,
+        "error_category": "timeout",
+        "severity": "medium",
+        "raw_response": "**ROOT CAUSE:**\nThe test is failing due to a timeout while waiting for the operator removal process to complete. Specifically, the test is trying to remove an operator via operator policy with `spec.removalBehavior.operatorGroups: DeleteIfUnused` setting, but the cleanup operation is taking longer than the configured timeout period. This suggests either the operator deletion process is stuck, the custom operator group isn't being properly cleaned up, or there are dependencies preventing timely removal.\n\n**SUGGESTED FIX:**\n1. Increase the timeout value for operator removal operations\n2. Add better logging/monitoring to identify what specific step is blocking\n3. Implement retry logic with exponential backoff for operator deletion\n4. Verify that the custom operator group and namespace don't have lingering dependencies\n5. Add explicit cleanup of related resources before attempting operator removal\n\n**CODE EXAMPLE:**\n```java\n// Increase timeout and add retry logic\n@Test\npublic void testOperatorRemoval() {\n    // Increase timeout from default (likely 60s) to 300s\n    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(300));\n    \n    // Add explicit cleanup steps\n    cleanupRelatedResources();\n    \n    // Trigger operator removal\n    removeOperatorViaPolicy();\n    \n    // Wait with better error reporting\n    wait.until(driver -> {\n        try {\n            return isOperatorFullyRemoved();\n        } catch (Exception e) {\n            log.debug(\"Operator still present: \" + e.getMessage());\n            return false;\n        }\n    });\n}\n```\n\n**CONFIDENCE:**\n0.8\n\n**ERROR_CATEGORY:**\ntimeout\n\n**SEVERITY:**\nmedium",
+        "analyzed_at": "2025-11-14T17:28:15.588042"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "hours",
+        "code_changes": "// Increase timeout for operator removal operations\ndescribe('GRC: Operator policy support', () => {\n  it('should remove operator with custom operator group', async () => {\n    // Increase timeout from default (likely 30s) to 300s for operator removal\n    await page.waitForSelector('[data-testid=\"operator-removed\"]', { \n      timeout: 300000 // 5 minutes instead of default\n    });\n    \n    // Add explicit wait for operator group cleanup\n    await page.waitForFunction(\n      () => !document.querySelector('[data-testid=\"operator-group-active\"]'),\n      { timeout: 180000 } // 3 minutes for operator group cleanup\n    );\n    \n    // Add retry mechanism for flaky removal operations\n    const retryRemoval = async (maxRetries = 3) => {\n      for (let i = 0; i < maxRetries; i++) {\n        try {\n          await triggerOperatorRemoval();\n          await waitForRemovalCompletion();\n          return;\n        } catch (error) {\n          if (i === maxRetries - 1) throw error;\n          await page.waitForTimeout(30000); // Wait 30s between retries\n        }\n      }\n    };\n    \n    await retryRemoval();\n  });\n});",
+        "configuration_changes": "# cypress.config.js or jest.config.js\n{\n  \"defaultCommandTimeout\": 300000,\n  \"requestTimeout\": 300000,\n  \"responseTimeout\": 300000,\n  \"pageLoadTimeout\": 300000\n}\n\n# For operator policy test suite specifically\noperatorRemovalTests: {\n  timeout: 600000, // 10 minutes for complex operator removal scenarios\n  retries: 2,\n  pollInterval: 5000\n}",
+        "dependencies": "None needed",
+        "validation_steps": [
+          "Run the specific failing test in isolation to verify timeout fix",
+          "Execute test with verbose logging to monitor operator removal progress",
+          "Verify custom operator group cleanup completes within extended timeframe",
+          "Test with different operator types to ensure fix is comprehensive",
+          "Run full GRC operator policy test suite to check for regressions"
+        ],
+        "prevention": "- Implement health checks for operator removal prerequisites before starting deletion\n- Add intermediate status polling during removal process to detect stuck operations early\n- Create operator removal status monitoring dashboard for test environments\n- Set up alerts for operator removal operations exceeding expected duration\n- Add cleanup verification steps between test runs to prevent state pollution",
+        "impact_assessment": "- Test execution time will increase by 4-5 minutes per operator removal test\n- Improved test reliability for operator policy management scenarios\n- Better coverage of real-world operator removal timing patterns\n- Potential impact on CI/CD pipeline duration requiring adjustment of overall test timeouts",
+        "rollback_plan": "1. Revert timeout configurations to original values in test config files\n2. Remove retry mechanisms from test code\n3. Restore original test assertions without extended wait periods\n4. Monitor test results for 24-48 hours to ensure stability\n5. If issues persist, implement gradual timeout increases (60s \u2192 120s \u2192 300s) to find optimal balance",
+        "raw_response": "**FIX_TYPE:**\nquick_fix\n\n**PRIORITY:**\nhigh\n\n**ESTIMATED_EFFORT:**\n2-4 hours\n\n**CODE_CHANGES:**\n```javascript\n// Increase timeout for operator removal operations\ndescribe('GRC: Operator policy support', () => {\n  it('should remove operator with custom operator group', async () => {\n    // Increase timeout from default (likely 30s) to 300s for operator removal\n    await page.waitForSelector('[data-testid=\"operator-removed\"]', { \n      timeout: 300000 // 5 minutes instead of default\n    });\n    \n    // Add explicit wait for operator group cleanup\n    await page.waitForFunction(\n      () => !document.querySelector('[data-testid=\"operator-group-active\"]'),\n      { timeout: 180000 } // 3 minutes for operator group cleanup\n    );\n    \n    // Add retry mechanism for flaky removal operations\n    const retryRemoval = async (maxRetries = 3) => {\n      for (let i = 0; i < maxRetries; i++) {\n        try {\n          await triggerOperatorRemoval();\n          await waitForRemovalCompletion();\n          return;\n        } catch (error) {\n          if (i === maxRetries - 1) throw error;\n          await page.waitForTimeout(30000); // Wait 30s between retries\n        }\n      }\n    };\n    \n    await retryRemoval();\n  });\n});\n```\n\n**CONFIGURATION_CHANGES:**\n```yaml\n# cypress.config.js or jest.config.js\n{\n  \"defaultCommandTimeout\": 300000,\n  \"requestTimeout\": 300000,\n  \"responseTimeout\": 300000,\n  \"pageLoadTimeout\": 300000\n}\n\n# For operator policy test suite specifically\noperatorRemovalTests: {\n  timeout: 600000, // 10 minutes for complex operator removal scenarios\n  retries: 2,\n  pollInterval: 5000\n}\n```\n\n**DEPENDENCIES:**\n```\nNone needed\n```\n\n**VALIDATION_STEPS:**\n1. Run the specific failing test in isolation to verify timeout fix\n2. Execute test with verbose logging to monitor operator removal progress\n3. Verify custom operator group cleanup completes within extended timeframe\n4. Test with different operator types to ensure fix is comprehensive\n5. Run full GRC operator policy test suite to check for regressions\n\n**PREVENTION:**\n- Implement health checks for operator removal prerequisites before starting deletion\n- Add intermediate status polling during removal process to detect stuck operations early\n- Create operator removal status monitoring dashboard for test environments\n- Set up alerts for operator removal operations exceeding expected duration\n- Add cleanup verification steps between test runs to prevent state pollution\n\n**IMPACT_ASSESSMENT:**\n- Test execution time will increase by 4-5 minutes per operator removal test\n- Improved test reliability for operator policy management scenarios\n- Better coverage of real-world operator removal timing patterns\n- Potential impact on CI/CD pipeline duration requiring adjustment of overall test timeouts\n\n**ROLLBACK_PLAN:**\n1. Revert timeout configurations to original values in test config files\n2. Remove retry mechanisms from test code\n3. Restore original test assertions without extended wait periods\n4. Monitor test results for 24-48 hours to ensure stability\n5. If issues persist, implement gradual timeout increases (60s \u2192 120s \u2192 300s) to find optimal balance",
+        "suggested_at": "2025-11-15T00:59:03.952411"
+      }
+    },
+    {
+      "test_name": "GRC: Test discovered policies pages in console \"before all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Test discovered policies pages in console \"before all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+        "status": "failed",
+        "failure_message": "Timed out retrying  Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`",
+        "framework": "junit",
+        "class_name": "\"before all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Test discovered policies pages in console"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test failure is occurring in a \"before all\" hook that is timing out during setup. This indicates that some prerequisite action or wait condition in the test setup phase is taking longer than the configured timeout limit. The hook is likely waiting for UI elements to load, API calls to complete, or page navigation to finish before running the actual test cases for the GRC discovered policies functionality.",
+        "suggested_fix": "1. Increase timeout values for the before all hook\n2. Add more specific wait conditions with explicit timeouts\n3. Break down complex setup into smaller, more targeted waits\n4. Add retry logic for flaky setup operations\n5. Verify that test environment/dependencies are properly initialized before the hook runs",
+        "code_example": "```javascript\n// Instead of generic timeout, use specific waits\ndescribe('GRC: Test discovered policies pages', () => {\n  before(async function() {\n    // Increase timeout for this specific hook\n    this.timeout(60000); // 60 seconds instead of default\n    \n    // Add specific wait conditions\n    await cy.visit('/discovered-policies');\n    \n    // Wait for specific elements instead of generic delays\n    cy.get('[data-testid=\"policies-table\"]', { timeout: 30000 })\n      .should('be.visible');\n      \n    // Wait for API calls to complete\n    cy.intercept('GET', '/api/policies/**').as('loadPolicies');\n    cy.wait('@loadPolicies', { timeout: 20000 });\n  });\n  \n  it('RHACM4K-52430: Verify Discovered policies table : Content', () => {\n    // Test implementation\n  });\n});\n```",
+        "confidence_score": 0.8,
+        "error_category": "timeout",
+        "severity": "medium",
+        "raw_response": "**ROOT CAUSE:**\nThe test failure is occurring in a \"before all\" hook that is timing out during setup. This indicates that some prerequisite action or wait condition in the test setup phase is taking longer than the configured timeout limit. The hook is likely waiting for UI elements to load, API calls to complete, or page navigation to finish before running the actual test cases for the GRC discovered policies functionality.\n\n**SUGGESTED FIX:**\n1. Increase timeout values for the before all hook\n2. Add more specific wait conditions with explicit timeouts\n3. Break down complex setup into smaller, more targeted waits\n4. Add retry logic for flaky setup operations\n5. Verify that test environment/dependencies are properly initialized before the hook runs\n\n**CODE EXAMPLE:**\n```javascript\n// Instead of generic timeout, use specific waits\ndescribe('GRC: Test discovered policies pages', () => {\n  before(async function() {\n    // Increase timeout for this specific hook\n    this.timeout(60000); // 60 seconds instead of default\n    \n    // Add specific wait conditions\n    await cy.visit('/discovered-policies');\n    \n    // Wait for specific elements instead of generic delays\n    cy.get('[data-testid=\"policies-table\"]', { timeout: 30000 })\n      .should('be.visible');\n      \n    // Wait for API calls to complete\n    cy.intercept('GET', '/api/policies/**').as('loadPolicies');\n    cy.wait('@loadPolicies', { timeout: 20000 });\n  });\n  \n  it('RHACM4K-52430: Verify Discovered policies table : Content', () => {\n    // Test implementation\n  });\n});\n```\n\n**CONFIDENCE:**\n0.8\n\n**ERROR_CATEGORY:**\ntimeout\n\n**SEVERITY:**\nmedium",
+        "analyzed_at": "2025-11-14T17:28:25.103795"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "hours",
+        "code_changes": "// In the test file (likely cypress/e2e/grc/discovered-policies.spec.js)\ndescribe('GRC: Test discovered policies pages in console', () => {\n  before(() => {\n    // Increase timeout for the before hook\n    cy.visit('/multicloud/policies/discovered', { timeout: 60000 });\n    \n    // Wait for critical elements with explicit timeouts\n    cy.get('[data-testid=\"discovered-policies-table\"]', { timeout: 30000 })\n      .should('be.visible');\n    \n    // Wait for API calls to complete\n    cy.intercept('GET', '**/api/v1/policies/discovered*').as('getDiscoveredPolicies');\n    cy.wait('@getDiscoveredPolicies', { timeout: 30000 });\n    \n    // Ensure page is fully loaded\n    cy.get('[data-testid=\"loading-spinner\"]', { timeout: 5000 })\n      .should('not.exist');\n  });\n  \n  // Add timeout configuration at test level\n  it('RHACM4K-52430: GRC: Verify Discovered policies table : Content', { \n    defaultCommandTimeout: 15000,\n    requestTimeout: 30000\n  }, () => {\n    // Test implementation\n  });\n});",
+        "configuration_changes": "// In cypress.config.js or cypress.json\n{\n  \"defaultCommandTimeout\": 15000,\n  \"requestTimeout\": 30000,\n  \"responseTimeout\": 30000,\n  \"pageLoadTimeout\": 60000\n}",
+        "dependencies": "None needed",
+        "validation_steps": [
+          "Run the specific test file to verify the before hook completes successfully",
+          "Check that discovered policies table loads within the extended timeout",
+          "Verify all subsequent tests in the suite execute properly after the before hook"
+        ],
+        "prevention": "- Implement retry logic for flaky network requests in before hooks\n- Add explicit waits for critical page elements before proceeding with tests\n- Use cy.intercept() to monitor and wait for specific API calls\n- Consider breaking down complex before hooks into smaller, more focused setup steps",
+        "impact_assessment": "- Test execution time will increase slightly due to longer timeouts\n- Improved test reliability for GRC discovered policies functionality\n- May reveal underlying performance issues in the application that need separate investigation",
+        "rollback_plan": "- Revert timeout configuration changes in cypress.config.js\n- Remove additional waits and intercepts from the before hook\n- Restore original test structure if modifications don't resolve the timeout issue",
+        "raw_response": "**FIX_TYPE:**\nquick_fix\n\n**PRIORITY:**\nhigh\n\n**ESTIMATED_EFFORT:**\n2-3 hours\n\n**CODE_CHANGES:**\n```javascript\n// In the test file (likely cypress/e2e/grc/discovered-policies.spec.js)\ndescribe('GRC: Test discovered policies pages in console', () => {\n  before(() => {\n    // Increase timeout for the before hook\n    cy.visit('/multicloud/policies/discovered', { timeout: 60000 });\n    \n    // Wait for critical elements with explicit timeouts\n    cy.get('[data-testid=\"discovered-policies-table\"]', { timeout: 30000 })\n      .should('be.visible');\n    \n    // Wait for API calls to complete\n    cy.intercept('GET', '**/api/v1/policies/discovered*').as('getDiscoveredPolicies');\n    cy.wait('@getDiscoveredPolicies', { timeout: 30000 });\n    \n    // Ensure page is fully loaded\n    cy.get('[data-testid=\"loading-spinner\"]', { timeout: 5000 })\n      .should('not.exist');\n  });\n  \n  // Add timeout configuration at test level\n  it('RHACM4K-52430: GRC: Verify Discovered policies table : Content', { \n    defaultCommandTimeout: 15000,\n    requestTimeout: 30000\n  }, () => {\n    // Test implementation\n  });\n});\n```\n\n**CONFIGURATION_CHANGES:**\n```javascript\n// In cypress.config.js or cypress.json\n{\n  \"defaultCommandTimeout\": 15000,\n  \"requestTimeout\": 30000,\n  \"responseTimeout\": 30000,\n  \"pageLoadTimeout\": 60000\n}\n```\n\n**DEPENDENCIES:**\n```\nNone needed\n```\n\n**VALIDATION_STEPS:**\n1. Run the specific test file to verify the before hook completes successfully\n2. Check that discovered policies table loads within the extended timeout\n3. Verify all subsequent tests in the suite execute properly after the before hook\n\n**PREVENTION:**\n- Implement retry logic for flaky network requests in before hooks\n- Add explicit waits for critical page elements before proceeding with tests\n- Use cy.intercept() to monitor and wait for specific API calls\n- Consider breaking down complex before hooks into smaller, more focused setup steps\n\n**IMPACT_ASSESSMENT:**\n- Test execution time will increase slightly due to longer timeouts\n- Improved test reliability for GRC discovered policies functionality\n- May reveal underlying performance issues in the application that need separate investigation\n\n**ROLLBACK_PLAN:**\n- Revert timeout configuration changes in cypress.config.js\n- Remove additional waits and intercepts from the before hook\n- Restore original test structure if modifications don't resolve the timeout issue",
+        "suggested_at": "2025-11-14T19:59:11.380840"
+      }
+    },
+    {
+      "test_name": "GRC: Test discovered policies pages in console \"after all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Test discovered policies pages in console \"after all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+        "status": "failed",
+        "failure_message": "expected 1 to equal 0  Because this error occurred during a `after all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`",
+        "framework": "junit",
+        "class_name": "\"after all\" hook for \"RHACM4K-52430: GRC: Verify Discovered policies table : Content\"",
+        "execution_time": 0.0,
+        "suite_name": "GRC: Test discovered policies pages in console"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test failure occurs in an \"after all\" cleanup hook where an assertion `expected 1 to equal 0` is failing. This indicates that the cleanup process expected to find 0 items (likely discovered policies) but found 1 item remaining. This suggests that either:\n1. The test didn't properly clean up created test data during execution\n2. There's existing data from a previous test run that wasn't cleaned up\n3. The cleanup logic in the \"after all\" hook has a bug in its deletion/cleanup process",
+        "suggested_fix": "1. Review the \"after all\" hook to understand what it's counting and trying to clean up\n2. Ensure the test properly removes any policies it creates during execution\n3. Add more robust cleanup logic that can handle edge cases where items might not be deleted immediately\n4. Consider adding a retry mechanism or wait condition for cleanup operations\n5. Verify the cleanup runs in the correct order and has proper error handling",
+        "code_example": "```javascript\n// Instead of direct assertion in after all hook\nafterAll(async () => {\n  // Wait for cleanup to complete\n  await page.waitForTimeout(2000);\n  \n  // Retry cleanup if items still exist\n  const remainingItems = await page.locator('.policy-item').count();\n  if (remainingItems > 0) {\n    await cleanupRemainingPolicies();\n    await page.waitForTimeout(1000);\n  }\n  \n  // Final verification with better error message\n  const finalCount = await page.locator('.policy-item').count();\n  expect(finalCount).toBe(0, `Expected 0 policies but found ${finalCount} remaining after cleanup`);\n});\n```",
+        "confidence_score": 0.8,
+        "error_category": "assertion",
+        "severity": "medium",
+        "raw_response": "**ROOT CAUSE:**\nThe test failure occurs in an \"after all\" cleanup hook where an assertion `expected 1 to equal 0` is failing. This indicates that the cleanup process expected to find 0 items (likely discovered policies) but found 1 item remaining. This suggests that either:\n1. The test didn't properly clean up created test data during execution\n2. There's existing data from a previous test run that wasn't cleaned up\n3. The cleanup logic in the \"after all\" hook has a bug in its deletion/cleanup process\n\n**SUGGESTED FIX:**\n1. Review the \"after all\" hook to understand what it's counting and trying to clean up\n2. Ensure the test properly removes any policies it creates during execution\n3. Add more robust cleanup logic that can handle edge cases where items might not be deleted immediately\n4. Consider adding a retry mechanism or wait condition for cleanup operations\n5. Verify the cleanup runs in the correct order and has proper error handling\n\n**CODE EXAMPLE:**\n```javascript\n// Instead of direct assertion in after all hook\nafterAll(async () => {\n  // Wait for cleanup to complete\n  await page.waitForTimeout(2000);\n  \n  // Retry cleanup if items still exist\n  const remainingItems = await page.locator('.policy-item').count();\n  if (remainingItems > 0) {\n    await cleanupRemainingPolicies();\n    await page.waitForTimeout(1000);\n  }\n  \n  // Final verification with better error message\n  const finalCount = await page.locator('.policy-item').count();\n  expect(finalCount).toBe(0, `Expected 0 policies but found ${finalCount} remaining after cleanup`);\n});\n```\n\n**CONFIDENCE:**\n0.8\n\n**ERROR_CATEGORY:**\nassertion\n\n**SEVERITY:**\nmedium",
+        "analyzed_at": "2025-11-14T17:28:35.247407"
+      },
+      "fix_suggestion": {
+        "success": false,
+        "error": "Claude CLI error: ",
+        "suggested_at": "2025-11-15T04:34:34.319288"
+      }
+    },
+    {
+      "test_name": "check the existed IAM policy",
+      "framework": "junit",
+      "original_test": {
+        "name": "check the existed IAM policy",
+        "status": "failed",
+        "failure_message": "Timed out retrying after 120000ms: Expected to find element: `#test-iam-policy-before-upgrade-actions`, but never found it.",
+        "framework": "junit",
+        "class_name": "RHACM4K-859: GRC: check the policies after upgrade check the existed IAM policy",
+        "execution_time": 0.0,
+        "suite_name": "RHACM4K-859: GRC: check the policies after upgrade"
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "The test is failing because a UI element with ID `#test-iam-policy-before-upgrade-actions` cannot be found within the 120-second timeout period. This suggests either: (1) the element is not being rendered due to slow loading/async operations, (2) the element ID has changed or doesn't exist, (3) the page navigation or state setup is incorrect, or (4) there's a race condition where the test runs before the IAM policy data is loaded.",
+        "suggested_fix": "Implement more robust waiting strategies and verify the element selector. Add explicit waits for the IAM policy data to load before searching for the element. Consider checking if the page is in the correct state and if any prerequisite actions need to complete first.",
+        "code_example": "```javascript\n// Instead of immediate element search, add proper waits\ncy.intercept('GET', '**/iam/policies/**').as('getPolicies');\ncy.visit('/iam-policy-page');\ncy.wait('@getPolicies');\n\n// Add conditional waiting with better error handling\ncy.get('body').then(($body) => {\n  if ($body.find('#test-iam-policy-before-upgrade-actions').length === 0) {\n    // Wait for loading states to complete\n    cy.get('[data-testid=\"loading-spinner\"]', { timeout: 60000 }).should('not.exist');\n    cy.get('[data-testid=\"iam-policies-container\"]').should('be.visible');\n  }\n});\n\ncy.get('#test-iam-policy-before-upgrade-actions', { timeout: 30000 }).should('exist');\n```",
+        "confidence_score": 0.8,
+        "error_category": "ui_interaction",
+        "severity": "medium",
+        "raw_response": "**ROOT CAUSE:**\nThe test is failing because a UI element with ID `#test-iam-policy-before-upgrade-actions` cannot be found within the 120-second timeout period. This suggests either: (1) the element is not being rendered due to slow loading/async operations, (2) the element ID has changed or doesn't exist, (3) the page navigation or state setup is incorrect, or (4) there's a race condition where the test runs before the IAM policy data is loaded.\n\n**SUGGESTED FIX:**\nImplement more robust waiting strategies and verify the element selector. Add explicit waits for the IAM policy data to load before searching for the element. Consider checking if the page is in the correct state and if any prerequisite actions need to complete first.\n\n**CODE EXAMPLE:**\n```javascript\n// Instead of immediate element search, add proper waits\ncy.intercept('GET', '**/iam/policies/**').as('getPolicies');\ncy.visit('/iam-policy-page');\ncy.wait('@getPolicies');\n\n// Add conditional waiting with better error handling\ncy.get('body').then(($body) => {\n  if ($body.find('#test-iam-policy-before-upgrade-actions').length === 0) {\n    // Wait for loading states to complete\n    cy.get('[data-testid=\"loading-spinner\"]', { timeout: 60000 }).should('not.exist');\n    cy.get('[data-testid=\"iam-policies-container\"]').should('be.visible');\n  }\n});\n\ncy.get('#test-iam-policy-before-upgrade-actions', { timeout: 30000 }).should('exist');\n```\n\n**CONFIDENCE:**\n0.8\n\n**ERROR_CATEGORY:**\nui_interaction\n\n**SEVERITY:**\nmedium",
+        "analyzed_at": "2025-11-14T17:28:44.558279"
+      },
+      "fix_suggestion": {
+        "success": false,
+        "error": "Claude CLI error: ",
+        "suggested_at": "2025-11-15T08:38:58.177363"
+      }
+    },
+    {
+      "test_name": "GRC: UI: GRC Policy namespace selection should support labels  RHACM4K-14942: GRC: Test Policy namespace label selector from UI",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: UI: GRC Policy namespace selection should support labels  RHACM4K-14942: GRC: Test Policy namespace label selector from UI",
+        "status": "failed",
+        "failure_message": "Timed out retrying",
+        "framework": "junit",
+        "class_name": "RHACM4K-14942: GRC: Test Policy namespace label selector from UI",
+        "execution_time": 0.0,
+        "suite_name": "GRC: UI: GRC Policy namespace selection should support labels "
+      },
+      "analysis": {
+        "success": false,
+        "root_cause": "",
+        "suggested_fix": "",
+        "code_example": "",
+        "confidence_score": 0.5,
+        "error_category": "unknown",
+        "severity": "medium",
+        "raw_response": "",
+        "error": "Failed to parse meaningful analysis from response",
+        "analyzed_at": "2025-11-14T17:29:13.375618"
+      },
+      "fix_suggestion": {
+        "success": false,
+        "error": "Claude CLI error: ",
+        "suggested_at": "2025-11-15T09:22:20.157252"
+      }
+    }
+  ]
+}

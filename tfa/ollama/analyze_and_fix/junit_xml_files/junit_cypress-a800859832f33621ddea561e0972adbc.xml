@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="325.3740" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2025-09-04T02:41:59" tests="0" file="tests/cypress/tests/e2e/policy_description.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="Test policy description field in Governance" timestamp="2025-09-04T02:41:59" tests="1" time="325.3530" failures="0">
+    <testcase name="Test policy description field in Governance RHACM4K-31385 - Test policy description field in Governance" time="324.0180" classname="RHACM4K-31385 - Test policy description field in Governance">
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,26 @@
+{
+  "test_results": [
+    {
+      "name": "test_user_authentication",
+      "status": "failed",
+      "failure_message": "AssertionError: Expected status code 200, but got 401\nResponse: {'error': 'Invalid authentication token'}",
+      "framework": "pytest"
+    },
+    {
+      "name": "GRC: check the policies after upgrade",
+      "status": "failed",
+      "failure_message": "AssertionError: Timed out retrying after 120000ms: Expected to find element: `#test-iam-policy-before-upgrade-actions`, but never found it.\n    at action_actionPolicyActionInListing (webpack://acmqe-grc-test/./tests/cypress/support/views.js:835:45)\n    at Context.eval (webpack://acmqe-grc-test/./tests/cypress/support/commands.js:479:51)\n    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)\n    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)\n    at Promise.attempt.Promise.try ",
+      "framework": "pytest"
+    },
+    {
+      "name": "test_cypress_text_assertion",
+      "status": "failed",
+      "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule'",
+      "framework": "cypress"
+    },
+    {
+      "name": "test_successful_operation",
+      "status": "passed"
+    }
+  ]
+}

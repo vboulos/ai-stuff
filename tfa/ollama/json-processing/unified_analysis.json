@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "generated_at": "2025-09-09T18:06:37.080042",
+    "input_file": "failed_tests.json",
+    "total_tests": 1,
+    "failed_tests": 1,
+    "processed_tests": 1,
+    "successful_analyses": 0,
+    "successful_fixes": 0,
+    "processing_mode": "parallel"
+  },
+  "summary": {
+    "analysis_success_rate": 0.0,
+    "fix_success_rate": 0.0,
+    "average_confidence": 0.0
+  },
+  "test_results": [
+    {
+      "test_name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+      "framework": "junit",
+      "original_test": {
+        "name": "GRC: Test export CSV functionality in GRC pages RHACM4K-52041: GRC: Policies list can be exported as CSV file from UI",
+        "status": "failed",
+        "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule for all virtualmachines.kubevirt.io resources with a cluster.open-cluster-management.io/backup-vm label.'",
+        "framework": "junit"
+      },
+      "analysis": {
+        "success": false,
+        "root_cause": "",
+        "suggested_fix": "",
+        "confidence_score": 0.5,
+        "error": "Failed to parse analysis from response"
+      },
+      "fix_suggestion": {
+        "success": false,
+        "fix_type": "unknown",
+        "priority": "medium",
+        "estimated_effort": "unknown",
+        "code_changes": "",
+        "configuration_changes": "",
+        "dependencies": "",
+        "validation_steps": [],
+        "prevention": "",
+        "impact_assessment": "",
+        "raw_response": "",
+        "error": "Failed to parse fix suggestion from response"
+      },
+      "processed_at": "2025-09-09T18:06:03.244050"
+    }
+  ]
+}

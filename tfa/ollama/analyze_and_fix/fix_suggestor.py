@@ -3,7 +3,6 @@
 Fix Suggester Class - Suggests code fixes for test failures using Ollama
 """
 
-import os
 import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -18,27 +17,16 @@ class FixSuggestor:
     Class to suggest code fixes for test failures using Ollama.
     """
 
-    def __init__(self, model: str = "llama3.1", timeout: int = 120, prompt_file: str = None):
+    def __init__(self, model: str = "llama3.1", timeout: int = 120):
         """
         Initialize the FixSuggestor.
 
         Args:
             model: Ollama model to use (e.g., 'llama3.1', 'mistral', 'codellama')
             timeout: Timeout for Ollama calls in seconds
-            prompt_file: Path to custom prompt file (default: prompts/fix_suggestion_prompt.txt)
         """
         self.model = model
         self.timeout = timeout
-
-        # Load prompt template
-        if prompt_file is None:
-            prompt_file = os.path.join(
-                os.path.dirname(__file__),
-                "prompts",
-                "fix_suggestion_prompt.txt"
-            )
-
-        self.prompt_template = self._load_prompt_template(prompt_file)
     
     def suggest_fix(self, test_name: str, failure_message: str, framework: str = None,
                    analysis_data: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -107,28 +95,16 @@ class FixSuggestor:
                 "suggested_at": datetime.now().isoformat()
             }
     
-    def _load_prompt_template(self, prompt_file: str) -> str:
-        """Load prompt template from file."""
-        try:
-            with open(prompt_file, 'r') as f:
-                return f.read()
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Prompt template file not found: {prompt_file}\n"
-                f"Please ensure the prompts directory exists with fix_suggestion_prompt.txt"
-            )
-
-    def _create_fix_prompt(self, test_name: str, failure_message: str, framework: str,
+    def _create_fix_prompt(self, test_name: str, failure_message: str, framework: str, 
                           analysis_data: Dict[str, Any]) -> str:
         """Create a prompt for fix suggestion."""
-
+        
         framework_info = f" (Framework: {framework})" if framework else ""
-
+        
         # Include analysis data if available
         analysis_context = ""
         if analysis_data and analysis_data.get("success"):
             analysis_context = f"""
-
 **PREVIOUS ANALYSIS:**
 - Root Cause: {analysis_data.get('root_cause', '')}
 - Suggested Fix: {analysis_data.get('suggested_fix', '')}
@@ -136,13 +112,57 @@ class FixSuggestor:
 - Category: {analysis_data.get('error_category', '')}
 - Severity: {analysis_data.get('severity', '')}
 """
+        
+        return f"""Generate specific code fixes for this failed test{framework_info}:
 
-        return self.prompt_template.format(
-            framework_info=framework_info,
-            test_name=test_name,
-            failure_message=failure_message,
-            analysis_context=analysis_context
-        )
+**TEST DETAILS:**
+- Test Name: {test_name}
+- Error: {failure_message}{analysis_context}
+
+Provide detailed fix suggestions in this format:
+
+**FIX_TYPE:**
+[quick_fix|refactor|configuration|dependency|infrastructure|test_update]
+
+**PRIORITY:**
+[critical|high|medium|low]
+
+**ESTIMATED_EFFORT:**
+[minutes|hours|days]
+
+**CODE_CHANGES:**
+```language
+// Show specific code changes needed
+// Include before/after examples
+// Be as specific as possible
+```
+
+**CONFIGURATION_CHANGES:**
+```
+// Any configuration file changes needed
+// Include file paths and specific settings
+```
+
+**DEPENDENCIES:**
+```
+// New dependencies or version updates needed
+// Include package names and versions
+```
+
+**VALIDATION_STEPS:**
+1. [Step to verify the fix]
+2. [How to test the fix]
+3. [Expected outcome]
+4. [Additional verification steps]
+
+**PREVENTION:**
+[How to prevent this issue in the future - be specific]
+
+**IMPACT_ASSESSMENT:**
+[What other areas might be affected by this fix]
+
+**ROLLBACK_PLAN:**
+[How to rollback if the fix causes issues]"""
 
     def _parse_fix_response(self, response: str) -> Dict[str, Any]:
         """Parse the Claude response into structured fix data."""

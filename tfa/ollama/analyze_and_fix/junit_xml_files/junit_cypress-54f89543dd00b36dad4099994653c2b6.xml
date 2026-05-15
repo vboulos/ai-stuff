@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="27.2400" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2025-09-04T02:40:27" tests="0" file="tests/cypress/tests/e2e/policy_delete_objects_auto_non_ui.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="GRC: ACM After deleting a policy the changes/objects created/modified by the policy are still on the target cluster non-ui" timestamp="2025-09-04T02:40:27" tests="1" time="27.2190" failures="0">
+    <testcase name="GRC: ACM After deleting a policy the changes/objects created/modified by the policy are still on the target cluster non-ui RHACM4K-17030: GRC: Test all objects deleted automatically when deleted the enforced policy, after set spec.pruneObjectBehavior as DeleteAll in this enforced policy" time="27.1350" classname="RHACM4K-17030: GRC: Test all objects deleted automatically when deleted the enforced policy, after set spec.pruneObjectBehavior as DeleteAll in this enforced policy">
+    </testcase>
+  </testsuite>
+</testsuites>

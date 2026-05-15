@@ -1,0 +1,117 @@
+{
+  "analysis_metadata": {
+    "timestamp": "2025-09-09T17:39:36.488904",
+    "input_file": "sample_failures.json",
+    "total_tests": 4,
+    "failed_tests": 3,
+    "analyzed_tests": 3,
+    "successful_analyses": 3,
+    "failed_analyses": 0,
+    "average_confidence": 0.9,
+    "fixes_generated": 3,
+    "fixes_failed": 0,
+    "fixes_generated_at": "2025-09-09T17:46:45.887463"
+  },
+  "analysis_summary": {
+    "total_tests": 4,
+    "failed_tests": 3,
+    "analyzed_tests": 3,
+    "successful_analyses": 3,
+    "failed_analyses": 0,
+    "average_confidence": 0.9,
+    "fixes_generated": 3,
+    "fixes_failed": 0
+  },
+  "test_analyses": [
+    {
+      "test_name": "test_user_authentication",
+      "framework": "pytest",
+      "status": "analyzed",
+      "analysis": {
+        "root_cause": "The test is failing because the authentication token being used is invalid, expired, or not being passed correctly to the API endpoint. The server is rejecting the request with a 401 Unauthorized status instead of the expected 200 OK.",
+        "suggested_fix": "1. Verify the test is using a valid authentication token\n2. Check if the token needs to be refreshed or regenerated\n3. Ensure the token is being passed in the correct header format\n4. Verify the test setup is properly authenticating the user before making the request",
+        "code_example": "```python\ndef test_user_authentication():\n    # Ensure proper token setup\n    token = generate_valid_token()  # or login_user().token\n    headers = {\n        'Authorization': f'Bearer {token}',\n        'Content-Type': 'application/json'\n    }\n    \n    response = client.get('/api/user', headers=headers)\n    assert response.status_code == 200\n```",
+        "confidence_score": 0.9
+      },
+      "original_test": {
+        "failure_message": "AssertionError: Expected status code 200, but got 401\nResponse: {'error': 'Invalid authentication token'}",
+        "status": "failed"
+      },
+      "analyzed_at": "2025-09-09T17:39:36.488973",
+      "fix_suggestion": {
+        "fix_type": "unknown",
+        "priority": "medium",
+        "estimated_effort": "unknown",
+        "code_changes": "",
+        "configuration_changes": "",
+        "dependencies": "",
+        "validation_steps": [],
+        "prevention": "",
+        "related_issues": "",
+        "raw_response": "The code fixes above address the `test_user_authentication` failure by providing multiple approaches to properly handle authentication tokens. The main issue is that the test is making an API request without proper authentication headers, resulting in a 401 Unauthorized response. The fixes include token-based authentication, session-based authentication, and pytest fixture patterns to ensure proper authentication setup before making API calls.",
+        "suggested_at": "2025-09-09T17:45:11.549929",
+        "success": true
+      }
+    },
+    {
+      "test_name": "GRC: check the policies after upgrade",
+      "framework": "pytest",
+      "status": "analyzed",
+      "analysis": {
+        "root_cause": "The test is failing due to a timing issue where Cypress cannot find the DOM element `#test-iam-policy-before-upgrade-actions` within the 120-second timeout. This is likely because either: (1) the element hasn't been rendered yet due to slow page loading/async operations, (2) the element selector has changed, or (3) the upgrade process hasn't completed properly, preventing the element from appearing.",
+        "suggested_fix": "1. Increase the timeout for this specific element lookup beyond 120 seconds\n2. Add explicit waits for the upgrade process to complete before searching for the element\n3. Verify the element selector is correct and hasn't changed in recent UI updates\n4. Add retry logic with intermediate checks for page state",
+        "code_example": "```javascript\n// In views.js around line 835, modify the element wait:\ncy.get('#test-iam-policy-before-upgrade-actions', { timeout: 300000 }) // 5 minutes\n  .should('be.visible');\n\n// Or add explicit wait for upgrade completion:\ncy.waitUntil(() => \n  cy.get('body').then($body => \n    $body.find('#test-iam-policy-before-upgrade-actions').length > 0\n  ), { timeout: 300000, interval: 5000 }\n);\n\n// Or add intermediate state checks:\ncy.get('[data-testid=\"upgrade-status\"]').should('contain', 'completed');\ncy.get('#test-iam-policy-before-upgrade-actions').should('exist');\n```",
+        "confidence_score": 0.8
+      },
+      "original_test": {
+        "failure_message": "AssertionError: Timed out retrying after 120000ms: Expected to find element: `#test-iam-policy-before-upgrade-actions`, but never found it.\n    at action_actionPolicyActionInListing (webpack://acmqe-grc-test/./tests/cypress/support/views.js:835:45)\n    at Context.eval (webpack://acmqe-grc-test/./tests/cypress/support/commands.js:479:51)\n    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)\n    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)\n    at Promise.attempt.Promise.try ",
+        "status": "failed"
+      },
+      "analyzed_at": "2025-09-09T17:39:36.488982",
+      "fix_suggestion": {
+        "fix_type": "unknown",
+        "priority": "medium",
+        "estimated_effort": "unknown",
+        "code_changes": "",
+        "configuration_changes": "",
+        "dependencies": "",
+        "validation_steps": [],
+        "prevention": "",
+        "related_issues": "",
+        "raw_response": "",
+        "suggested_at": "2025-09-09T17:45:58.266255",
+        "success": true
+      }
+    },
+    {
+      "test_name": "test_cypress_text_assertion",
+      "framework": "cypress",
+      "status": "analyzed",
+      "analysis": {
+        "root_cause": "The test is failing due to a missing space in the actual text. The expected text contains \" Creates a velero Schedule\" (with a space before \"Creates\"), but the actual text shows \".Creates a velero Schedule\" (no space after the period).",
+        "suggested_fix": "Update the test assertion to match the actual text format, or fix the source text to include the proper spacing. The issue is a single missing space character after the period.",
+        "code_example": "```javascript\n// Current failing assertion\ncy.get('dd.pf-v5-c-description-list__description')\n  .should('contain.text', 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule')\n\n// Fix option 1: Update test to match actual text\ncy.get('dd.pf-v5-c-description-list__description')\n  .should('contain.text', 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule')\n\n// Fix option 2: Use more flexible assertion\ncy.get('dd.pf-v5-c-description-list__description')\n  .should('contain.text', 'Policy is placed on hub or managed clusters')\n  .and('contain.text', 'Creates a velero Schedule')\n```",
+        "confidence_score": 1.0
+      },
+      "original_test": {
+        "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule'",
+        "status": "failed"
+      },
+      "analyzed_at": "2025-09-09T17:39:36.488985",
+      "fix_suggestion": {
+        "fix_type": "unknown",
+        "priority": "medium",
+        "estimated_effort": "unknown",
+        "code_changes": "",
+        "configuration_changes": "",
+        "dependencies": "",
+        "validation_steps": [],
+        "prevention": "",
+        "related_issues": "",
+        "raw_response": "",
+        "suggested_at": "2025-09-09T17:46:45.887370",
+        "success": true
+      }
+    }
+  ]
+}

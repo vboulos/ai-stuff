@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+
+# Analysis outputs
+comprehensive_analysis.json
+sample_test_failures.json
+*.json
+
+# Logs
+*.log
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation (included separately)
+*.md
+!requirements.txt
+
+# XML test files
+*.xml
+junit_xml_files/
+
+# macOS
+.DS_Store

@@ -3,7 +3,6 @@
 Failure Analysis Class - Analyzes test failures using Ollama
 """
 
-import os
 import re
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -18,27 +17,16 @@ class FailureAnalyzer:
     Class to analyze test failures using Ollama.
     """
 
-    def __init__(self, model: str = "llama3.1", timeout: int = 120, prompt_file: str = None):
+    def __init__(self, model: str = "llama3.1", timeout: int = 120):
         """
         Initialize the FailureAnalyzer.
 
         Args:
             model: Ollama model to use (e.g., 'llama3.1', 'mistral', 'codellama')
             timeout: Timeout for Ollama calls in seconds
-            prompt_file: Path to custom prompt file (default: prompts/analysis_prompt.txt)
         """
         self.model = model
         self.timeout = timeout
-
-        # Load prompt template
-        if prompt_file is None:
-            prompt_file = os.path.join(
-                os.path.dirname(__file__),
-                "prompts",
-                "analysis_prompt.txt"
-            )
-
-        self.prompt_template = self._load_prompt_template(prompt_file)
     
     def analyze_failure(self, test_name: str, failure_message: str, framework: str = None) -> Dict[str, Any]:
         """
@@ -100,27 +88,35 @@ class FailureAnalyzer:
                 "analyzed_at": datetime.now().isoformat()
             }
     
-    def _load_prompt_template(self, prompt_file: str) -> str:
-        """Load prompt template from file."""
-        try:
-            with open(prompt_file, 'r') as f:
-                return f.read()
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Prompt template file not found: {prompt_file}\n"
-                f"Please ensure the prompts directory exists with analysis_prompt.txt"
-            )
-
     def _create_analysis_prompt(self, test_name: str, failure_message: str, framework: str) -> str:
         """Create a prompt for failure analysis."""
-
+        
         framework_info = f" (Framework: {framework})" if framework else ""
+        
+        return f"""Analyze this test failure{framework_info}:
 
-        return self.prompt_template.format(
-            framework_info=framework_info,
-            test_name=test_name,
-            failure_message=failure_message
-        )
+Test: {test_name}
+Error: {failure_message}
+
+Provide analysis in this format:
+
+**ROOT CAUSE:**
+[Why did it fail? Be specific about the underlying issue]
+
+**SUGGESTED FIX:**
+[High-level approach to fix the issue]
+
+**CODE EXAMPLE:**
+[Code example if helpful - show specific changes needed]
+
+**CONFIDENCE:**
+[0.1 to 1.0 - how confident are you in this analysis]
+
+**ERROR_CATEGORY:**
+[timeout|assertion|network|configuration|dependency|ui_interaction|database|authentication]
+
+**SEVERITY:**
+[critical|high|medium|low]"""
 
     def _parse_analysis_response(self, response: str) -> Dict[str, Any]:
         """Parse the Claude response into structured analysis data."""

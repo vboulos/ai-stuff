@@ -3,7 +3,6 @@
 Fix Suggester Class - Suggests code fixes for test failures using Ollama
 """
 
-import os
 import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -18,27 +17,16 @@ class FixSuggestor:
     Class to suggest code fixes for test failures using Ollama.
     """
 
-    def __init__(self, model: str = "llama3.1", timeout: int = 120, prompt_file: str = None):
+    def __init__(self, model: str = "llama3.1", timeout: int = 120):
         """
         Initialize the FixSuggestor.
 
         Args:
             model: Ollama model to use (e.g., 'llama3.1', 'mistral', 'codellama')
             timeout: Timeout for Ollama calls in seconds
-            prompt_file: Path to custom prompt file (default: prompts/fix_suggestion_prompt.txt)
         """
         self.model = model
         self.timeout = timeout
-
-        # Load prompt template
-        if prompt_file is None:
-            prompt_file = os.path.join(
-                os.path.dirname(__file__),
-                "prompts",
-                "fix_suggestion_prompt.txt"
-            )
-
-        self.prompt_template = self._load_prompt_template(prompt_file)
     
     def suggest_fix(self, test_name: str, failure_message: str, framework: str = None,
                    analysis_data: Dict[str, Any] = None) -> Dict[str, Any]:
@@ -107,28 +95,16 @@ class FixSuggestor:
                 "suggested_at": datetime.now().isoformat()
             }
     
-    def _load_prompt_template(self, prompt_file: str) -> str:
-        """Load prompt template from file."""
-        try:
-            with open(prompt_file, 'r') as f:
-                return f.read()
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Prompt template file not found: {prompt_file}\n"
-                f"Please ensure the prompts directory exists with fix_suggestion_prompt.txt"
-            )
-
-    def _create_fix_prompt(self, test_name: str, failure_message: str, framework: str,
+    def _create_fix_prompt(self, test_name: str, failure_message: str, framework: str, 
                           analysis_data: Dict[str, Any]) -> str:
         """Create a prompt for fix suggestion."""
-
+        
         framework_info = f" (Framework: {framework})" if framework else ""
-
+        
         # Include analysis data if available
         analysis_context = ""
         if analysis_data and analysis_data.get("success"):
             analysis_context = f"""
-
 **PREVIOUS ANALYSIS:**
 - Root Cause: {analysis_data.get('root_cause', '')}
 - Suggested Fix: {analysis_data.get('suggested_fix', '')}
@@ -136,13 +112,57 @@ class FixSuggestor:
 - Category: {analysis_data.get('error_category', '')}
 - Severity: {analysis_data.get('severity', '')}
 """
+        
+        return f"""Generate specific code fixes for this failed test{framework_info}:
 
-        return self.prompt_template.format(
-            framework_info=framework_info,
-            test_name=test_name,
-            failure_message=failure_message,
-            analysis_context=analysis_context
-        )
+**TEST DETAILS:**
+- Test Name: {test_name}
+- Error: {failure_message}{analysis_context}
+
+Provide detailed fix suggestions in this format:
+
+**FIX_TYPE:**
+[quick_fix|refactor|configuration|dependency|infrastructure|test_update]
+
+**PRIORITY:**
+[critical|high|medium|low]
+
+**ESTIMATED_EFFORT:**
+[minutes|hours|days]
+
+**CODE_CHANGES:**
+```language
+// Show specific code changes needed
+// Include before/after examples
+// Be as specific as possible
+```
+
+**CONFIGURATION_CHANGES:**
+```
+// Any configuration file changes needed
+// Include file paths and specific settings
+```
+
+**DEPENDENCIES:**
+```
+// New dependencies or version updates needed
+// Include package names and versions
+```
+
+**VALIDATION_STEPS:**
+1. [Step to verify the fix]
+2. [How to test the fix]
+3. [Expected outcome]
+4. [Additional verification steps]
+
+**PREVENTION:**
+[How to prevent this issue in the future - be specific]
+
+**IMPACT_ASSESSMENT:**
+[What other areas might be affected by this fix]
+
+**ROLLBACK_PLAN:**
+[How to rollback if the fix causes issues]"""
 
     def _parse_fix_response(self, response: str) -> Dict[str, Any]:
         """Parse the Claude response into structured fix data."""
@@ -213,53 +233,45 @@ class FixSuggestor:
     def suggest_fixes_for_analyses(self, analysis_results: list) -> list:
         """
         Generate fix suggestions for multiple analysis results.
-
+        
         Args:
             analysis_results: List of analysis result dictionaries
-
+            
         Returns:
             List of results with added fix suggestions
         """
-        import time
         results = []
-        start_time = time.time()
-
+        
         for i, analysis_result in enumerate(analysis_results, 1):
             test_name = analysis_result.get("test_name", f"test_{i}")
             framework = analysis_result.get("framework")
             original_test = analysis_result.get("original_test", {})
             analysis = analysis_result.get("analysis", {})
-
+            
             failure_message = original_test.get("failure_message", "")
-
-            iteration_start = time.time()
-            print(f"🛠️  [{i}/{len(analysis_results)}] Generating fix: {test_name[:80]}...")
-
+            
+            print(f"🛠️  Generating fix {i}/{len(analysis_results)}: {test_name}")
+            
             fix_suggestion = self.suggest_fix(
-                test_name,
-                failure_message,
-                framework,
+                test_name, 
+                failure_message, 
+                framework, 
                 analysis
             )
-
-            iteration_time = time.time() - iteration_start
-            elapsed_total = time.time() - start_time
-            avg_time = elapsed_total / i
-            est_remaining = avg_time * (len(analysis_results) - i)
-
+            
             # Add fix suggestion to the result
             result = analysis_result.copy()
             result["fix_suggestion"] = fix_suggestion
-
+            
             results.append(result)
-
+            
             if fix_suggestion["success"]:
                 fix_type = fix_suggestion.get("fix_type", "unknown")
                 priority = fix_suggestion.get("priority", "medium")
-                print(f"   ✅ Done in {iteration_time:.1f}s (Type: {fix_type}, Priority: {priority}) | ETA: {est_remaining:.0f}s")
+                print(f"✅ Fix generated (Type: {fix_type}, Priority: {priority})")
             else:
-                print(f"   ❌ Failed in {iteration_time:.1f}s: {fix_suggestion.get('error', 'Unknown error')[:60]}")
-
+                print(f"❌ Fix generation failed: {fix_suggestion.get('error', 'Unknown error')}")
+        
         return results
     
     def get_fix_summary(self, results_with_fixes: list) -> Dict[str, Any]:
@@ -303,65 +315,30 @@ class FixSuggestor:
 
 # Example usage and testing
 if __name__ == "__main__":
-    import argparse
-    import json
-
-    parser = argparse.ArgumentParser(description='Suggest fixes for test failures using Ollama')
-    parser.add_argument('--model', default='llama3.1', help='Ollama model to use (default: llama3.1)')
-    parser.add_argument('--input', help='JSON file with analysis results')
-    parser.add_argument('--output', help='Output JSON file for fix suggestions')
-
-    args = parser.parse_args()
-
-    suggestor = FixSuggestor(model=args.model)
-
-    # If input file is provided, process it
-    if args.input:
-        try:
-            with open(args.input, 'r') as f:
-                analysis_results = json.load(f)
-
-            # Handle both list and dict formats
-            if isinstance(analysis_results, dict):
-                if 'results' in analysis_results:
-                    analysis_results = analysis_results['results']
-                else:
-                    analysis_results = [analysis_results]
-
-            results = suggestor.suggest_fixes_for_analyses(analysis_results)
-
-            if args.output:
-                with open(args.output, 'w') as f:
-                    json.dump(results, f, indent=2)
-                print(f"\n✅ Results saved to: {args.output}")
-            else:
-                print(json.dumps(results, indent=2))
-
-        except Exception as e:
-            print(f"❌ Error: {e}")
+    suggestor = FixSuggestor()
+    
+    # Test with sample failure and analysis
+    sample_analysis = {
+        "success": True,
+        "root_cause": "Authentication token is invalid or expired",
+        "suggested_fix": "Check token validation logic",
+        "confidence_score": 0.8,
+        "error_category": "authentication",
+        "severity": "high"
+    }
+    
+    result = suggestor.suggest_fix(
+        "test_login",
+        "AssertionError: Expected status code 200, but got 401",
+        "pytest",
+        sample_analysis
+    )
+    
+    if result["success"]:
+        print("Fix Type:", result["fix_type"])
+        print("Priority:", result["priority"])
+        print("Effort:", result["estimated_effort"])
+        print("Code Changes:", result["code_changes"][:100] + "..." if len(result["code_changes"]) > 100 else result["code_changes"])
+        print("Validation Steps:", len(result["validation_steps"]), "steps")
     else:
-        # Test with sample failure and analysis
-        sample_analysis = {
-            "success": True,
-            "root_cause": "Authentication token is invalid or expired",
-            "suggested_fix": "Check token validation logic",
-            "confidence_score": 0.8,
-            "error_category": "authentication",
-            "severity": "high"
-        }
-
-        result = suggestor.suggest_fix(
-            "test_login",
-            "AssertionError: Expected status code 200, but got 401",
-            "pytest",
-            sample_analysis
-        )
-
-        if result["success"]:
-            print("Fix Type:", result["fix_type"])
-            print("Priority:", result["priority"])
-            print("Effort:", result["estimated_effort"])
-            print("Code Changes:", result["code_changes"][:100] + "..." if len(result["code_changes"]) > 100 else result["code_changes"])
-            print("Validation Steps:", len(result["validation_steps"]), "steps")
-        else:
-            print("Error:", result["error"])
+        print("Error:", result["error"])
