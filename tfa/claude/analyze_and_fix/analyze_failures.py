@@ -56,6 +56,9 @@ class FailureAnalyzer:
             - suggested_fix: str
             - code_example: str
             - confidence_score: float (0.1-1.0)
+            - error_category: str
+            - severity: str
+            - additional_context: str (optional, depends on prompt)
             - error: str (if failed)
             - analyzed_at: str (timestamp)
         """
@@ -124,7 +127,7 @@ class FailureAnalyzer:
 
     def _parse_analysis_response(self, response: str) -> Dict[str, Any]:
         """Parse the Claude response into structured analysis data."""
-        
+
         analysis_data = {
             "success": True,
             "root_cause": "",
@@ -133,32 +136,34 @@ class FailureAnalyzer:
             "confidence_score": 0.5,
             "error_category": "unknown",
             "severity": "medium",
+            "additional_context": "",
             "raw_response": response
         }
-        
+
         # Parse sections using regex
         sections = {}
         pattern = r'\*\*([^*]+):\*\*\s*(.*?)(?=\*\*[^*]+:\*\*|$)'
-        
+
         for section_name, content in re.findall(pattern, response, re.DOTALL | re.IGNORECASE):
             sections[section_name.strip().upper()] = content.strip()
-        
+
         # Map sections to analysis_data
         analysis_data["root_cause"] = sections.get("ROOT CAUSE", "")
         analysis_data["suggested_fix"] = sections.get("SUGGESTED FIX", "")
         analysis_data["code_example"] = sections.get("CODE EXAMPLE", "")
         analysis_data["error_category"] = sections.get("ERROR_CATEGORY", "unknown").lower()
         analysis_data["severity"] = sections.get("SEVERITY", "medium").lower()
-        
+        analysis_data["additional_context"] = sections.get("ADDITIONAL_CONTEXT", "")
+
         # Extract confidence score
         confidence_text = sections.get("CONFIDENCE", "0.5")
         analysis_data["confidence_score"] = self._extract_confidence(confidence_text)
-        
+
         # Validate that we got meaningful content
         if not analysis_data["root_cause"] and not analysis_data["suggested_fix"]:
             analysis_data["success"] = False
             analysis_data["error"] = "Failed to parse meaningful analysis from response"
-        
+
         return analysis_data
     
     def _extract_confidence(self, confidence_text: str) -> float:
