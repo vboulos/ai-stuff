@@ -38,8 +38,7 @@ pipeline {
                                 -c http.sslVerify=false \
                                 clone \
                                 -b "${params.SOURCE_CODE_BRANCH}" \
-                                "https://github.com/${repo}" \
-                                .
+                                "https://github.com/${repo}" 
                         """
                         }
                     }
