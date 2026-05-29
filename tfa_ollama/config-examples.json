@@ -1,0 +1,97 @@
+{
+  "ollama_example": {
+    "jenkins": {
+      "url": "https://jenkins.example.com",
+      "user": "jenkins-user",
+      "token": "your-jenkins-token"
+    },
+    "ai": {
+      "provider": "ollama",
+      "model": "llama3.2"
+    },
+    "test_source": {
+      "directories": [
+        "./tests",
+        "./cypress/tests",
+        "./src/test/java",
+        "./test"
+      ]
+    }
+  },
+  
+  "openai_example": {
+    "jenkins": {
+      "url": "https://jenkins.example.com",
+      "user": "jenkins-user", 
+      "token": "your-jenkins-token"
+    },
+    "ai": {
+      "provider": "openai",
+      "model": "gpt-4",
+      "api_key": "your-openai-api-key"
+    },
+    "test_source": {
+      "directories": [
+        "./tests",
+        "./cypress/tests",
+        "./src/test",
+        "./test"
+      ]
+    }
+  },
+  
+  "claude_example": {
+    "jenkins": {
+      "url": "https://jenkins.example.com",
+      "user": "jenkins-user",
+      "token": "your-jenkins-token"
+    },
+    "ai": {
+      "provider": "claude", 
+      "model": "claude-3-haiku-20240307",
+      "api_key": "your-anthropic-api-key"
+    },
+    "test_source": {
+      "directories": [
+        "./tests",
+        "./cypress/tests", 
+        "./src/test",
+        "./test"
+      ]
+    }
+  },
+  
+  "generic_api_example": {
+    "jenkins": {
+      "url": "https://jenkins.example.com",
+      "user": "jenkins-user",
+      "token": "your-jenkins-token"
+    },
+    "ai": {
+      "provider": "generic",
+      "api_url": "https://your-ai-service.com/api/v1/chat",
+      "headers": {
+        "Authorization": "Bearer your-api-token",
+        "Content-Type": "application/json"
+      },
+      "payload_template": {
+        "model": "your-model-name",
+        "messages": [
+          {
+            "role": "user",
+            "content": "{{PROMPT}}"
+          }
+        ]
+      },
+      "response_path": "choices.0.message.content"
+    },
+    "test_source": {
+      "directories": [
+        "./tests",
+        "./cypress/tests",
+        "./src/test",
+        "./test"
+      ]
+    }
+  }
+}

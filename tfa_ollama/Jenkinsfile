@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+    
+    parameters {
+        string(name: 'TARGET_PIPELINE', description: 'Pipeline to analyze', defaultValue: '')
+        string(name: 'TARGET_BUILD_NUMBER', description: 'Build number to analyze', defaultValue: '')
+        choice(name: 'AI_PROVIDER', choices: ['ollama', 'openai', 'claude'], description: 'AI Provider')
+        string(name: 'MAX_FAILURES', description: 'Max failures to analyze', defaultValue: '10')
+    }
+    
+    environment {
+        JENKINS_CREDS = credentials('jenkins-api-credentials')
+        OPENAI_API_KEY = credentials('openai-api-key')
+        ANTHROPIC_API_KEY = credentials('anthropic-api-key')
+    }
+    
+    stages {
+        stage('Setup') {
+            steps {
+                sh 'python3 -m pip install --user -r requirements.txt'
+            }
+        }
+        
+        stage('Generate Config') {
+            steps {
+                script {
+                    def config = [
+                        jenkins: [
+                            url: env.JENKINS_URL,
+                            user: env.JENKINS_CREDS_USR,
+                            token: env.JENKINS_CREDS_PSW
+                        ],
+                        ai: [
+                            provider: params.AI_PROVIDER,
+                            model: params.AI_PROVIDER == 'ollama' ? 'llama3.2' : 
+                                   params.AI_PROVIDER == 'openai' ? 'gpt-4' : 'claude-3-haiku-20240307'
+                        ]
+                    ]
+                    
+                    if (params.AI_PROVIDER == 'openai') {
+                        config.ai.api_key = env.OPENAI_API_KEY
+                    } else if (params.AI_PROVIDER == 'claude') {
+                        config.ai.api_key = env.ANTHROPIC_API_KEY
+                    }
+                    
+                    writeJSON file: 'config.json', json: config
+                }
+            }
+        }
+        
+        stage('Run Analysis') {
+            steps {
+                script {
+                    def outputFile = "analysis_${params.TARGET_PIPELINE.replaceAll('/', '_')}_${params.TARGET_BUILD_NUMBER}.json"
+                    
+                    sh """
+                        python3 analyze_test_failures.py \\
+                            "${params.TARGET_PIPELINE}" \\
+                            ${params.TARGET_BUILD_NUMBER} \\
+                            --config config.json \\
+                            --output "${outputFile}" \\
+                            --max-failures ${params.MAX_FAILURES}
+                    """
+                    
+                    archiveArtifacts artifacts: "${outputFile}", fingerprint: true
+                    
+                    def result = readJSON file: outputFile
+                    currentBuild.description = "Analyzed ${result.analysisMetadata.totalFailures} failures"
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            sh 'rm -f config.json'
+        }
+    }
+}

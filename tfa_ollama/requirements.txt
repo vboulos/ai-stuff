@@ -1,0 +1,22 @@
+# Core dependencies
+requests>=2.31.0
+python-dateutil>=2.8.2
+
+# AI Provider dependencies (install as needed)
+# Ollama
+ollama>=0.1.7
+
+# OpenAI (optional)
+openai>=1.0.0
+
+# Anthropic/Claude (optional) 
+anthropic>=0.7.0
+
+# XML processing (built-in but explicit for clarity)
+# xml.etree.ElementTree is built-in
+
+# Development and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=23.0.0
+flake8>=6.0.0

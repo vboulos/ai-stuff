@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="66.5080" tests="1" failures="2">
+  <testsuite name="Root Suite" timestamp="2025-09-04T02:23:08" tests="0" file="tests/cypress/tests/e2e/discoveredpolicies_listing.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="GRC: Test discovered policies pages in console" timestamp="2025-09-04T02:23:08" tests="1" time="66.4830" failures="2">
+    <testcase name="GRC: Test discovered policies pages in console &quot;before all&quot; hook for &quot;RHACM4K-52430: GRC: Verify Discovered policies table : Content&quot;" time="0.0000" classname="&quot;before all&quot; hook for &quot;RHACM4K-52430: GRC: Verify Discovered policies table : Content&quot;">
+      <failure message="Timed out retrying
+
+Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`" type="Error"><![CDATA[Error: Timed out retrying
+
+Because this error occurred during a `before all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`
+    at Context.check (webpack://acmqe-grc-test/./node_modules/cypress-wait-until/src/index.js:62:0)
+    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)
+    at Promise.attempt.Promise.try (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:4285:29)
+    at Context.thenFn (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118360:66)
+    at Context.then (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118611:21)
+    at wrapped (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:138862:19)
+    at <unknown> (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:144789:15)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)]]></failure>
+    </testcase>
+    <testcase name="GRC: Test discovered policies pages in console &quot;after all&quot; hook for &quot;RHACM4K-52430: GRC: Verify Discovered policies table : Content&quot;" time="0.0000" classname="&quot;after all&quot; hook for &quot;RHACM4K-52430: GRC: Verify Discovered policies table : Content&quot;">
+      <failure message="expected 1 to equal 0
+
+Because this error occurred during a `after all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`" type="AssertionError"><![CDATA[AssertionError: expected 1 to equal 0
+
+Because this error occurred during a `after all` hook we are skipping the remaining tests in the current suite: `GRC: Test discovered polici...`
+    at Context.eval (webpack://acmqe-grc-test/./tests/cypress/support/views.js:4160:27)
+    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)
+    at Promise.attempt.Promise.try (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:4285:29)
+    at Context.thenFn (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118360:66)
+    at Context.then (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118611:21)]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

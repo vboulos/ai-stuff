@@ -1,0 +1,9 @@
+{
+    "ai": {
+    "provider": "ollama",
+    "model": "llama3.2"
+  },
+  "skill": {
+    "file_path": "./skills/analyze-test-failures.md"
+  }
+}

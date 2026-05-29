@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="551.4880" tests="9" failures="1">
+  <testsuite name="Root Suite" timestamp="2025-09-04T01:46:39" tests="0" file="tests/cypress/tests/upgrade/After_upgrade_check_policy.cy.js" time="0.0000" failures="0">
+  </testsuite>
+  <testsuite name="RHACM4K-859: GRC: check the policies after upgrade" timestamp="2025-09-04T01:46:39" tests="9" time="551.4640" failures="1">
+    <testcase name="check all existed policies whether work well" time="40.1530" classname="RHACM4K-859: GRC: check the policies after upgrade check all existed policies whether work well">
+    </testcase>
+    <testcase name="check the existed namespace policy" time="40.4860" classname="RHACM4K-859: GRC: check the policies after upgrade check the existed namespace policy">
+    </testcase>
+    <testcase name="check the existed IAM policy" time="0.0000" classname="RHACM4K-859: GRC: check the policies after upgrade check the existed IAM policy">
+      <failure message="Timed out retrying after 120000ms: Expected to find element: `#test-iam-policy-before-upgrade-actions`, but never found it." type="AssertionError"><![CDATA[AssertionError: Timed out retrying after 120000ms: Expected to find element: `#test-iam-policy-before-upgrade-actions`, but never found it.
+    at action_actionPolicyActionInListing (webpack://acmqe-grc-test/./tests/cypress/support/views.js:835:45)
+    at Context.eval (webpack://acmqe-grc-test/./tests/cypress/support/commands.js:479:51)
+    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)
+    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)
+    at Promise.attempt.Promise.try (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:4285:29)
+    at Context.thenFn (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118360:66)
+    at Context.then (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118611:21)
+    at wrapped (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:138862:19)]]></failure>
+    </testcase>
+    <testcase name="check the existed cert policy" time="84.6390" classname="RHACM4K-859: GRC: check the policies after upgrade check the existed cert policy">
+    </testcase>
+    <testcase name="check the existed template policy" time="76.8420" classname="RHACM4K-859: GRC: check the policies after upgrade check the existed template policy">
+    </testcase>
+    <testcase name="check the existed hub template policy" time="74.1990" classname="RHACM4K-859: GRC: check the policies after upgrade check the existed hub template policy">
+    </testcase>
+    <testcase name="check the existed disabled policy" time="33.5750" classname="RHACM4K-859: GRC: check the policies after upgrade check the existed disabled policy">
+    </testcase>
+    <testcase name="check the automation and schedule a &quot;run once&quot; automation" time="62.3490" classname="RHACM4K-859: GRC: check the policies after upgrade check the automation and schedule a &quot;run once&quot; automation">
+    </testcase>
+    <testcase name="check the pruneObjectBehavior function for existing pod" time="0.4780" classname="RHACM4K-859: GRC: check the policies after upgrade check the pruneObjectBehavior function for existing pod">
+    </testcase>
+  </testsuite>
+</testsuites>

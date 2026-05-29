@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "generated_at": "2026-04-15T10:27:19.774079",
+    "input_file": "sample_failures.json",
+    "model": "llama3.1",
+    "framework": null,
+    "total_tests": 1,
+    "successful_analyses": 1,
+    "analyze_only": false,
+    "fix_summary": {
+      "total_fixes": 1,
+      "successful_fixes": 1,
+      "failed_fixes": 0,
+      "success_rate": 1.0,
+      "fix_type_distribution": {
+        "quick_fix": 1
+      },
+      "priority_distribution": {
+        "high": 1
+      },
+      "effort_distribution": {
+        "minutes": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "test_name": "test_1",
+      "framework": null,
+      "original_test": {
+        "test_results": [
+          {
+            "name": "test_user_authentication",
+            "status": "failed",
+            "failure_message": "AssertionError: Expected status code 200, but got 401\nResponse: {'error': 'Invalid authentication token'}",
+            "framework": "pytest"
+          },
+          {
+            "name": "GRC: check the policies after upgrade",
+            "status": "failed",
+            "failure_message": "AssertionError: Timed out retrying after 120000ms: Expected to find element: `#test-iam-policy-before-upgrade-actions`, but never found it.\n    at action_actionPolicyActionInListing (webpack://acmqe-grc-test/./tests/cypress/support/views.js:835:45)\n    at Context.eval (webpack://acmqe-grc-test/./tests/cypress/support/commands.js:479:51)\n    at getRet (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:118349:20)\n    at tryCatcher (https://console-openshift-console.apps.qe1-vmware-ibm.dev09.red-chesterfield.com/__cypress/runner/cypress_runner.js:1777:23)\n    at Promise.attempt.Promise.try ",
+            "framework": "pytest"
+          },
+          {
+            "name": "test_cypress_text_assertion",
+            "status": "failed",
+            "failure_message": "Timed out retrying after 120000ms: expected '<dd.pf-v5-c-description-list__description>' to contain text 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name. Creates a velero Schedule', but the text was 'Policy is placed on hub or managed clusters with label acm-virt-config=acm-dr-virt-config-file-name.Creates a velero Schedule'",
+            "framework": "cypress"
+          },
+          {
+            "name": "test_successful_operation",
+            "status": "passed"
+          }
+        ]
+      },
+      "analysis": {
+        "success": true,
+        "root_cause": "Unknown (requires more details)",
+        "suggested_fix": "Investigate the test failure by reviewing the error message and code changes made recently.",
+        "code_example": "N/A",
+        "confidence_score": 0.5,
+        "error_category": "unknown (requires more details)",
+        "severity": "medium",
+        "raw_response": "However, I don't see any additional information about the test failure. Please provide more details about the error message or the test itself.\n\nIf you provide the following:\n\n* The actual error message\n* Any relevant code snippets\n* Information about the testing framework and environment\n\nI can attempt to analyze the issue in the requested format.\n\nAssuming a generic example, here's an analysis based on incomplete information:\n\n**ROOT CAUSE:**\nUnknown (requires more details)\n\n**SUGGESTED FIX:**\nInvestigate the test failure by reviewing the error message and code changes made recently.\n\n**CODE EXAMPLE:**\nN/A\n\n**CONFIDENCE:**\n0.5 (low confidence due to lack of information)\n\n**ERROR_CATEGORY:**\nUnknown (requires more details)\n\n**SEVERITY:**\nMedium",
+        "analyzed_at": "2026-04-15T10:26:57.416144"
+      },
+      "fix_suggestion": {
+        "success": true,
+        "fix_type": "quick_fix",
+        "priority": "high",
+        "estimated_effort": "minutes",
+        "code_changes": "// Fix the test failure by checking if the error message is related to a recent code change.\n// If yes, revert the recent code changes and re-run the test.\n\n// Before:\n// assert.equal(user.name, 'John Doe');\n\n// After (assuming a recent code change):\n// user.name = 'Jane Doe'; // This line was added recently\n// assert.equal(user.name, 'Jane Doe');\n\n// Fix:\n// Remove the recent code change or revert it to its previous state.",
+        "configuration_changes": "# No configuration file changes needed for this fix.",
+        "dependencies": "# No new dependencies or version updates needed for this fix.",
+        "validation_steps": [
+          "Re-run the test after reverting the recent code change to ensure it passes.",
+          "Verify that the test failure is resolved and no other issues arise.",
+          "Expected outcome: The test should pass without any errors.",
+          "Additional verification steps:"
+        ],
+        "prevention": "To prevent similar issues in the future, consider implementing the following:\n\n* Use version control systems (e.g., Git) to track code changes and easily revert them if needed.\n* Implement automated testing and continuous integration/continuous deployment (CI/CD) pipelines to catch test failures early on.\n* Regularly review code changes made by team members to ensure they are not introducing any issues.",
+        "impact_assessment": "This fix might affect other areas of the codebase if there were similar recent code changes that caused test failures. Reviewing and reverting those changes could be necessary to prevent further issues.",
+        "rollback_plan": "If this fix causes issues, follow these steps:\n\n1. Revert the code change made in step 2.\n2. Run a full suite of tests to ensure no new bugs were introduced.\n3. If issues persist, investigate and resolve them before re-applying the original fix.",
+        "raw_response": "Based on the provided test details, I'll generate a detailed fix suggestion.\n\n**TEST DETAILS:**\n\n* Test Name: test_1\n* Error:\n\n**PREVIOUS ANALYSIS:**\n\n* Root Cause: Unknown (requires more details)\n* Suggested Fix: Investigate the test failure by reviewing the error message and code changes made recently.\n* Confidence: 0.5\n* Category: unknown (requires more details)\n* Severity: medium\n\n**FIX_TYPE:** quick_fix\n\n**PRIORITY:** high\n\n**ESTIMATED_EFFORT:** minutes\n\n**CODE_CHANGES:**\n```language\n// Fix the test failure by checking if the error message is related to a recent code change.\n// If yes, revert the recent code changes and re-run the test.\n\n// Before:\n// assert.equal(user.name, 'John Doe');\n\n// After (assuming a recent code change):\n// user.name = 'Jane Doe'; // This line was added recently\n// assert.equal(user.name, 'Jane Doe');\n\n// Fix:\n// Remove the recent code change or revert it to its previous state.\n```\n\n**CONFIGURATION_CHANGES:**\n```markdown\n# No configuration file changes needed for this fix.\n```\n\n**DEPENDENCIES:**\n```markdown\n# No new dependencies or version updates needed for this fix.\n```\n\n**VALIDATION_STEPS:**\n\n1. Re-run the test after reverting the recent code change to ensure it passes.\n2. Verify that the test failure is resolved and no other issues arise.\n3. Expected outcome: The test should pass without any errors.\n4. Additional verification steps:\n\t* Review the code changes made recently to ensure they are not causing any other issues.\n\t* Run a full suite of tests to ensure this fix does not introduce any new bugs.\n\n**PREVENTION:**\n\nTo prevent similar issues in the future, consider implementing the following:\n\n* Use version control systems (e.g., Git) to track code changes and easily revert them if needed.\n* Implement automated testing and continuous integration/continuous deployment (CI/CD) pipelines to catch test failures early on.\n* Regularly review code changes made by team members to ensure they are not introducing any issues.\n\n**IMPACT_ASSESSMENT:**\n\nThis fix might affect other areas of the codebase if there were similar recent code changes that caused test failures. Reviewing and reverting those changes could be necessary to prevent further issues.\n\n**ROLLBACK_PLAN:**\n\nIf this fix causes issues, follow these steps:\n\n1. Revert the code change made in step 2.\n2. Run a full suite of tests to ensure no new bugs were introduced.\n3. If issues persist, investigate and resolve them before re-applying the original fix.",
+        "suggested_at": "2026-04-15T10:27:19.774008"
+      }
+    }
+  ]
+}

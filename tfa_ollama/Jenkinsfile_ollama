@@ -1,0 +1,87 @@
+@Library('ci-shared-lib') _
+
+pipeline {
+    options {
+        buildDiscarder(logRotator(daysToKeepStr: '30'))
+        timeout(time: 8, unit: 'HOURS')
+    }
+    agent {
+        kubernetes {
+            defaultContainer 'tfa-container'
+            yamlFile 'tfa/JenkinsAgent_ollama.yaml'
+        }
+    }
+    parameters {
+        string(name: 'SOURCE_CODE_REPO', defaultValue: 'stolostron/acmqe-grc-test.git', description: 'The Source Code Repository to checkout')
+        string(name: 'SOURCE_CODE_BRANCH', defaultValue: 'main', description: 'The Source Code Branch to checkout')
+        string(name: 'SOURCE_CODE_TEST_DIR', defaultValue: './tests', description: 'The Source Code Test Directory to checkout')
+        string(name: 'GIT_BRANCH', defaultValue: 'main', description: 'The GIT branch to checkout')
+    }
+    environment {
+        BUILD_URL = sh(returnStdout: true, script: "echo ${env.BUILD_URL}").trim()
+        GITHUB_TOKEN = credentials('vincent-github-token')
+        WORKDIR = "${env.WORKSPACE}/ci"
+        PATH="${WORKDIR}/bin:${env.PATH}"
+    } 
+    stages {
+        stage('Clone the GRC repo') {
+            steps {
+                retry(count: 3) {
+                    script{
+                        // def repo = "stolostron/acmqe-grc-test.git"
+                        def repo = "${params.SOURCE_CODE_REPO}"
+                        withCredentials([string(credentialsId: 'vincent-github-token', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            rm -rf ./* ./.[!.]* ./.??*
+                            # Configure Git to use the token for this command only via a secure header.
+                            git -c http.https://github.com/.extraheader="AUTHORIZATION: basic \$(echo -n x-oauth-basic:${GITHUB_TOKEN} | base64)" \
+                                -c http.sslVerify=false \
+                                clone \
+                                -b "${params.SOURCE_CODE_BRANCH}" \
+                                "https://github.com/${repo}" \
+                                .
+                        """
+                        }
+                    }
+                }
+            }
+        }
+        stage('TFA') {
+            steps {
+                catchError(stageResult: 'UNSTABLE',  buildResult: null) { 
+                sh """
+                    # 1. Start Ollama in the background
+                    ollama serve > ollama.log 2>&1 &
+                    
+                    # 2. Wait for it to be ready
+                    echo "Starting Ollama..."
+                    until curl -s localhost:11434/api/tags > /dev/null; do sleep 2; done
+                    
+                    # 3. Pull a small model (crucial for 4Gi RAM limit)
+                    # ollama pull tinyllama
+                    ollama pull llama3.2
+                    
+                    echo "----- Execution phase -----"
+                    cd tfa_ollama
+                    
+
+                    # convert the grc junit.xml files into a single json file that has the failed test cases only
+                    # python3 junit_xml_to_json.py junit_xml_files/* --output tests_analysis/grc_failed_tests.json --simple
+
+                    # Analyze the failures in the generated json file, provide fix suggestions and generate them into a final json file that is ready for processing 
+                    # python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --model llama3.1 --output tests_analysis/analysis_and_fixes.json
+                    # python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --model llama3.2 --output tests_analysis/analysis_and_fixes.json --yes --skip-verify
+
+                    # Local mode with multiple directories
+                    python3 analyze_test_failures.py local ./junit_xml_files --test-dirs ../acmqe-grc-test/${params.SOURCE_CODE_TEST_DIR}
+                """
+                }
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'tfa_ollama/*', followSymlinks: false
+        }
+    }
+}

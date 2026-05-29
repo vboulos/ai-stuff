@@ -1,0 +1,30 @@
+{
+  "jenkins": {
+    "url": "https://your-jenkins-server.com",
+    "user": "your-jenkins-username",
+    "token": "your-jenkins-api-token"
+  },
+  "ai": {
+    "provider": "ollama",
+    "model": "llama3.2"
+  },
+  "test_source": {
+    "directories": [
+      "./tests",
+      "./src/test",
+      "./cypress/tests",
+      "./test"
+    ]
+  },
+  "local_junit": {
+    "xml_paths": [
+      "./target/surefire-reports",
+      "./build/test-results",
+      "./test-output",
+      "./results/*.xml"
+    ]
+  },
+  "skill": {
+    "file_path": "./skills/analyze-test-failures.md"
+  }
+}
