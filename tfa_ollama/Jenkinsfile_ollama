@@ -32,7 +32,7 @@ pipeline {
                         def repo = "${params.SOURCE_CODE_REPO}"
                         withCredentials([string(credentialsId: 'vincent-github-token', variable: 'GITHUB_TOKEN')]) {
                         sh """
-                            rm -rf ./* ./.[!.]* ./.??*
+                            # rm -rf ./* ./.[!.]* ./.??*
                             # Configure Git to use the token for this command only via a secure header.
                             git -c http.https://github.com/.extraheader="AUTHORIZATION: basic \$(echo -n x-oauth-basic:${GITHUB_TOKEN} | base64)" \
                                 -c http.sslVerify=false \
