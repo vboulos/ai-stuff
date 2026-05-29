@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
-Analyze and Suggest Fixes - Main script to analyze test failures and suggest fixes using Ollama
+Analyze and Suggest Fixes - Main script implementing analyze-test-failures skill using Ollama
+
+Implements the analyze-test-failures skill for comprehensive test failure analysis:
+- JUnit XML scanning and parsing
+- Root cause analysis with Ollama LLM  
+- Structured JSON output following skill schema
+- Source code mapping and fix suggestions
+- Integration with Jenkins and GitHub APIs
 """
 
 import json
@@ -82,17 +89,20 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
 Examples:
-  # Basic usage with default model (llama3.1)
+  # Basic usage with skill format (default)
   python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json
 
-  # Specify a different model
-  python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --model llama3.2
+  # Full skill analysis with Jenkins and GitHub context
+  python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json \
+    --pipeline "CI-jobs/search_tests" --build-number 456 \
+    --github-repo "https://github.com/stolostron/e2e-tests" \
+    --test-directory "cypress/tests" --skill-output
 
-  # Specify output file
-  python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --output results.json
+  # Legacy mode for backward compatibility
+  python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --legacy-mode
 
-  # Full example with all options
-  python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --model llama3.2 --output tests_analysis/analysis_and_fixes.json --framework pytest
+  # Analysis only without fix suggestions
+  python3 analyze_and_suggest_fixes.py tests_analysis/grc_failed_tests.json --analyze-only
         '''
     )
 
@@ -105,6 +115,27 @@ Examples:
         '--model',
         default='llama3.1',
         help='Ollama model to use (default: llama3.1). Examples: llama3.1, llama3.2, mistral, codellama'
+    )
+    
+    parser.add_argument(
+        '--pipeline',
+        help='Jenkins pipeline name (e.g., "CI-jobs/search_tests") for skill context'
+    )
+    
+    parser.add_argument(
+        '--build-number',
+        type=int,
+        help='Jenkins build number for skill context'
+    )
+    
+    parser.add_argument(
+        '--github-repo',
+        help='GitHub repository URL for source code analysis'
+    )
+    
+    parser.add_argument(
+        '--test-directory',
+        help='Directory path containing test files for skill mapping'
     )
 
     parser.add_argument(
@@ -154,18 +185,34 @@ Examples:
         action='store_true',
         help='Only analyze failures, do not generate fix suggestions'
     )
+    
+    parser.add_argument(
+        '--skill-output',
+        action='store_true',
+        help='Generate output in analyze-test-failures skill schema format'
+    )
+    
+    parser.add_argument(
+        '--legacy-mode',
+        action='store_true',
+        help='Use legacy analysis format instead of skill format'
+    )
 
     args = parser.parse_args()
 
     # Print configuration
     print("=" * 60)
-    print("🔍 Test Failure Analysis and Fix Suggestions")
+    print("🔍 Test Failure Analysis (analyze-test-failures skill)")
     print("=" * 60)
-    print(f"Input file:  {args.input_file}")
-    print(f"Output file: {args.output}")
-    print(f"Model:       {args.model}")
-    print(f"Framework:   {args.framework or 'auto-detect'}")
-    print(f"Timeout:     {args.timeout}s")
+    print(f"Input file:    {args.input_file}")
+    print(f"Output file:   {args.output}")
+    print(f"Model:         {args.model}")
+    print(f"Framework:     {args.framework or 'auto-detect'}")
+    print(f"Pipeline:      {getattr(args, 'pipeline', None) or 'not specified'}")
+    print(f"Build Number:  {getattr(args, 'build_number', None) or 'not specified'}")
+    print(f"GitHub Repo:   {getattr(args, 'github_repo', None) or 'not specified'}")
+    print(f"Skill Format:  {'No (legacy)' if getattr(args, 'legacy_mode', False) else 'Yes'}")
+    print(f"Timeout:       {args.timeout}s")
     print("=" * 60)
     print()
 
@@ -181,9 +228,10 @@ Examples:
     print(f"✅ Loaded {len(test_failures)} test failure(s)")
     print()
 
-    # Initialize analyzer
-    print(f"🤖 Initializing analyzer with model: {args.model}")
-    analyzer = FailureAnalyzer(model=args.model, timeout=args.timeout)
+    # Initialize analyzer with skill mode
+    use_skill_mode = not getattr(args, 'legacy_mode', False)
+    print(f"🤖 Initializing analyzer with model: {args.model} (skill mode: {use_skill_mode})")
+    analyzer = FailureAnalyzer(model=args.model, timeout=args.timeout, skill_mode=use_skill_mode)
 
     # Test Ollama connection (unless --skip-verify)
     if not args.skip_verify:
@@ -228,10 +276,31 @@ Examples:
         print("⏩ Skipping Ollama connection verification (--skip-verify enabled)")
         print()
 
+    # Prepare skill context parameters
+    skill_kwargs = {}
+    if getattr(args, 'pipeline', None):
+        skill_kwargs['pipeline_name'] = args.pipeline
+    if getattr(args, 'build_number', None):
+        skill_kwargs['build_number'] = args.build_number
+    if getattr(args, 'github_repo', None):
+        skill_kwargs['github_repo'] = args.github_repo
+    if getattr(args, 'test_directory', None):
+        skill_kwargs['test_directory'] = args.test_directory
+    
     # Analyze failures
-    print("🔬 Analyzing test failures...")
+    print("🔬 Analyzing test failures using analyze-test-failures skill...")
+    if skill_kwargs:
+        print(f"📋 Using skill context: {', '.join(f'{k}={v}' for k, v in skill_kwargs.items())}")
     print()
-    analysis_results = analyzer.analyze_multiple_failures(test_failures, args.framework)
+    
+    # Apply skill context to each test failure
+    enhanced_test_failures = []
+    for test_case in test_failures:
+        enhanced_test_case = test_case.copy()
+        enhanced_test_case.update(skill_kwargs)
+        enhanced_test_failures.append(enhanced_test_case)
+    
+    analysis_results = analyzer.analyze_multiple_failures(enhanced_test_failures, args.framework)
 
     # Count successful analyses
     successful_analyses = sum(1 for r in analysis_results if r.get('analysis', {}).get('success'))
@@ -254,19 +323,60 @@ Examples:
         final_results = analysis_results
         fix_summary = None
 
-    # Prepare output
-    output_data = {
-        "metadata": {
-            "generated_at": datetime.now().isoformat(),
-            "input_file": args.input_file,
-            "model": args.model,
-            "framework": args.framework,
-            "total_tests": len(test_failures),
-            "successful_analyses": successful_analyses,
-            "analyze_only": args.analyze_only
-        },
-        "results": final_results
-    }
+    # Prepare output based on skill format
+    if getattr(args, 'skill_output', False) or use_skill_mode:
+        # Use analyze-test-failures skill schema format
+        output_data = {
+            "analysisMetadata": {
+                "pipeline": getattr(args, 'pipeline', None) or "unknown",
+                "buildNumber": getattr(args, 'build_number', None) or 0,
+                "analysisTimestamp": datetime.now().isoformat(),
+                "totalFailures": len(test_failures),
+                "processingTime": "completed",
+                "model": args.model,
+                "skillVersion": "3.0.0"
+            },
+            "failureAnalysis": [],
+            "summaryMetrics": {
+                "automationBugs": 0,
+                "infrastructureIssues": 0,
+                "productIssues": 0,
+                "environmentIssues": 0
+            }
+        }
+        
+        # Transform results to skill format
+        for result in final_results:
+            if result.get('analysis', {}).get('success'):
+                analysis = result['analysis']
+                
+                # Count categories for summary metrics
+                category = analysis.get('failureDetails', {}).get('category', 'automation')
+                if category == 'automation':
+                    output_data['summaryMetrics']['automationBugs'] += 1
+                elif category == 'infrastructure':
+                    output_data['summaryMetrics']['infrastructureIssues'] += 1
+                elif category == 'product':
+                    output_data['summaryMetrics']['productIssues'] += 1
+                elif category == 'environment':
+                    output_data['summaryMetrics']['environmentIssues'] += 1
+                
+                # Add to failure analysis
+                output_data['failureAnalysis'].append(analysis)
+    else:
+        # Use legacy format
+        output_data = {
+            "metadata": {
+                "generated_at": datetime.now().isoformat(),
+                "input_file": args.input_file,
+                "model": args.model,
+                "framework": args.framework,
+                "total_tests": len(test_failures),
+                "successful_analyses": successful_analyses,
+                "analyze_only": args.analyze_only
+            },
+            "results": final_results
+        }
 
     if fix_summary:
         output_data["metadata"]["fix_summary"] = fix_summary
@@ -283,6 +393,16 @@ Examples:
     print("=" * 60)
     print(f"Total tests analyzed:     {len(test_failures)}")
     print(f"Successful analyses:      {successful_analyses}")
+    
+    if use_skill_mode and 'summaryMetrics' in output_data:
+        print()
+        print("Skill Analysis Summary:")
+        metrics = output_data['summaryMetrics']
+        print(f"  - Automation bugs:      {metrics['automationBugs']}")
+        print(f"  - Infrastructure issues: {metrics['infrastructureIssues']}")
+        print(f"  - Product issues:       {metrics['productIssues']}")
+        print(f"  - Environment issues:   {metrics['environmentIssues']}")
+    
     if fix_summary:
         print(f"Successful fix suggestions: {fix_summary['successful_fixes']}")
         print()

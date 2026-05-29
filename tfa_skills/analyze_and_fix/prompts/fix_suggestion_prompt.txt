@@ -1,0 +1,50 @@
+Generate specific code fixes for this failed test{framework_info}:
+
+**TEST DETAILS:**
+- Test Name: {test_name}
+- Error: {failure_message}{analysis_context}
+
+Provide detailed fix suggestions in this format:
+
+**FIX_TYPE:**
+[quick_fix|refactor|configuration|dependency|infrastructure|test_update]
+
+**PRIORITY:**
+[critical|high|medium|low]
+
+**ESTIMATED_EFFORT:**
+[minutes|hours|days]
+
+**CODE_CHANGES:**
+```language
+// Show specific code changes needed
+// Include before/after examples
+// Be as specific as possible
+```
+
+**CONFIGURATION_CHANGES:**
+```
+// Any configuration file changes needed
+// Include file paths and specific settings
+```
+
+**DEPENDENCIES:**
+```
+// New dependencies or version updates needed
+// Include package names and versions
+```
+
+**VALIDATION_STEPS:**
+1. [Step to verify the fix]
+2. [How to test the fix]
+3. [Expected outcome]
+4. [Additional verification steps]
+
+**PREVENTION:**
+[How to prevent this issue in the future - be specific]
+
+**IMPACT_ASSESSMENT:**
+[What other areas might be affected by this fix]
+
+**ROLLBACK_PLAN:**
+[How to rollback if the fix causes issues]

@@ -1,6 +1,6 @@
-# Test Failure Analysis with Ollama
+# Test Failure Analysis with analyze-test-failures Skill
 
-Automated test failure analysis and fix suggestions using local LLMs via Ollama.
+Automated test failure analysis implementing the `analyze-test-failures` skill using Ollama for local LLM processing.
 
 ## 🚀 Quick Start (TL;DR)
 
@@ -29,13 +29,21 @@ python3 analyze_and_suggest_fixes.py \
 
 ## 📋 What This Does
 
-This tool analyzes test failures and provides:
+This tool implements the **analyze-test-failures skill v3.0.0** and provides:
 
-1. **Root Cause Analysis** - Why did the test fail?
-2. **Suggested Fixes** - How to fix it
-3. **Code Examples** - Specific code changes needed
-4. **Validation Steps** - How to verify the fix
-5. **Priority & Effort** - How urgent and how much work
+1. **JUnit XML Scanning** - Parse test results from Jenkins builds
+2. **Root Cause Analysis** - Why did the test fail?
+3. **Source Code Mapping** - Map failures to test source files
+4. **Automation Bug Detection** - Identify test automation issues vs. product bugs
+5. **Structured JSON Output** - Follow skill schema for machine processing
+6. **Fix Suggestions** - Specific code changes and validation steps
+
+### Skill Features
+- ✅ **Schema Compliance**: Follows analyze-test-failures skill v3.0.0
+- ✅ **Jenkins Integration**: Pipeline and build context support  
+- ✅ **GitHub Integration**: Source code analysis with repository URLs
+- ✅ **Confidence Scoring**: 0-1 scale for fix suggestion reliability
+- ✅ **Category Classification**: automation|infrastructure|product|environment
 
 ---
 
@@ -52,17 +60,32 @@ This tool analyzes test failures and provides:
 
 ## 🎯 Common Use Cases
 
+### Skill Format Analysis (Recommended)
+```bash
+# Full skill analysis with Jenkins/GitHub context
+python3 analyze_and_suggest_fixes.py input.json \
+    --pipeline "CI-jobs/search_tests" \
+    --build-number 456 \
+    --github-repo "https://github.com/stolostron/e2e-tests" \
+    --skill-output \
+    --model llama3.2
+```
+
 ### For CI/CD (Jenkins, GitLab, GitHub Actions)
 ```bash
 python3 analyze_and_suggest_fixes.py input.json \
+    --pipeline "${JOB_NAME}" \
+    --build-number "${BUILD_NUMBER}" \
     --model llama3.2 \
+    --skill-output \
     --output results.json \
     --yes --skip-verify
 ```
 
-### For Local Development
+### Legacy Mode (Backward Compatibility)
 ```bash
 python3 analyze_and_suggest_fixes.py input.json \
+    --legacy-mode \
     --model llama3.2 \
     --output results.json
 ```
@@ -71,6 +94,7 @@ python3 analyze_and_suggest_fixes.py input.json \
 ```bash
 python3 analyze_and_suggest_fixes.py input.json \
     --model llama3.2 --limit 1 \
+    --skill-output \
     --output test.json --yes --skip-verify
 ```
 
@@ -78,6 +102,7 @@ python3 analyze_and_suggest_fixes.py input.json \
 ```bash
 python3 analyze_and_suggest_fixes.py input.json \
     --model llama3.2 --analyze-only \
+    --skill-output \
     --output analysis.json --yes --skip-verify
 ```
 
@@ -152,6 +177,14 @@ Key Options:
   --analyze-only         Skip fix suggestions (2x faster)
   --timeout SECONDS      Timeout per API call (default: 60)
   --framework NAME       Test framework (pytest, jest, cypress)
+
+Skill Options:
+  --pipeline NAME         Jenkins pipeline name
+  --build-number NUM      Build number for tracking
+  --github-repo URL       GitHub repository for source analysis  
+  --test-directory PATH   Directory containing test files
+  --skill-output         Generate skill schema format output
+  --legacy-mode          Use legacy format (backward compatibility)
 
 See USAGE.md for all options
 ```
