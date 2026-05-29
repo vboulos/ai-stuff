@@ -8,7 +8,7 @@ pipeline {
     agent {
         kubernetes {
             defaultContainer 'tfa-container'
-            yamlFile 'tfa/JenkinsAgent_ollama.yaml'
+            yamlFile 'tfa_ollama/JenkinsAgent_ollama.yaml'
         }
     }
     parameters {
