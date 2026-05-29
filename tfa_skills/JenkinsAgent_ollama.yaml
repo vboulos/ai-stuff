@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    label: ci
+    owner: pics
+spec:
+  activeDeadlineSeconds: 54000
+  containers:
+  - name: jnlp
+    image: "image-registry.openshift-image-registry.svc:5000/dno--jenkins-csb-rhacm/tests-jenkins-agent:latest"
+    workingDir: '/home/jenkins'
+    env:
+      - name: HOME
+        value: '/home/jenkins'
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+  - name: tfa-container
+    image: 'quay.io/vboulos/acmqe-automation/pics:ubi9-ollama'
+    tty: true
+    imagePullPolicy: Always
+    # We use 'cat' to keep the container alive. 
+    # Jenkins will inject its scripts into this container.
+    command:
+      - /bin/bash
+      - -c
+      - cat
+    workingDir: '/home/jenkins'
+    env:
+      - name: HOME
+        value: '/home/jenkins'
+      - name: OLLAMA_HOST
+        value: '0.0.0.0:11434'
+    resources:
+      limits:
+        cpu: "4"         # Ollama is CPU intensive for inference without a GPU
+        memory: 8Gi      # 4Gi is the minimum for small models
+      requests:
+        cpu: "1"
+        memory: 6Gi
