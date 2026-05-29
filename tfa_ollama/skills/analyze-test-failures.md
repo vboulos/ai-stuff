@@ -31,6 +31,7 @@ Perform comprehensive analysis of test failures by scanning JUnit XML files, map
 - `include_source_analysis` (boolean, optional): Enable source code analysis (default: true)
 - `suggest_fixes` (boolean, optional): Generate automation fix suggestions (default: true)
 - `max_failures` (integer, optional): Maximum number of failures to analyze in detail (default: 10)
+- `filter_pattern` (string, optional): Filter test cases by pattern (default: "RHACM4K-" for Red Hat ACM Quality Engineering)
 
 ## Pipeline Mapping
 
@@ -43,12 +44,16 @@ This skill works with any Jenkins pipeline that produces:
 
 ### 1. Identify Failures
 - **JUnit XML Scanning**: Automatically scan specified directories for junit.xml files
+- **Pattern Filtering**: Filter test cases matching specific patterns (e.g., RHACM4K- for ACM Quality Engineering)
 - **Failure Extraction**: Parse XML files to extract all failed test cases with detailed metadata
 - **Error Categorization**: Classify failures by type (assertion, timeout, exception, etc.)
 - **Stack Trace Analysis**: Extract and parse complete stack traces for each failure
+- **Structural Data Mapping**: Extract test source file paths and fix locations for each failure
 
 ### 2. Code Mapping  
-- **GitHub Repository Search**: Search repository to match failed test names with source code files
+- **Test Source File Location**: Locate and identify the full path and filename of source files hosting test cases
+- **Fix Location Identification**: Pinpoint exact code blocks or files requiring modification to fix test failures
+- **Framework vs Application Bug Detection**: Distinguish between test framework bugs and application bugs
 - **Test Method Location**: Identify exact file paths and line numbers for failed test methods
 - **Dependency Mapping**: Map test dependencies and helper functions
 - **Test Data Analysis**: Identify test data files and configuration dependencies
@@ -141,6 +146,31 @@ When `github_repo` is provided:
 - **Package Structure**: Navigate test package hierarchies efficiently
 - **Multi-Framework Support**: Handle different test frameworks (JUnit, TestNG, Cypress, etc.)
 
+## RHACM4K Test Analysis Requirements
+
+For test cases matching the pattern "RHACM4K-", extract and map the following structural data:
+
+### Required Data Extraction
+- **Test Source File**: Locate and print the full path and filename of the source file hosting the test case
+- **Fix Location**: Pinpoint the exact code block or file requiring modification to fix the test failure
+- **Bug Type Classification**: Distinguish between test framework bug, application bug, and automation bug
+- **Pattern Matching**: Only process test cases containing the string pattern "RHACM4K-"
+
+### Structural Mapping Output
+For each RHACM4K test failure, provide:
+```json
+{
+  "rhacmId": "RHACM4K-XXXXX",
+  "testSourceFile": "full/path/to/test/source/file.js",
+  "fixLocation": {
+    "targetFile": "path/to/file/requiring/fix.js", 
+    "targetLines": [123, 124, 125],
+    "bugType": "test_framework|application|automation",
+    "description": "Specific description of what needs to be fixed"
+  }
+}
+```
+
 ## Failure Analysis Categories
 
 ### 1. Infrastructure Issues
@@ -188,10 +218,18 @@ The skill generates a comprehensive JSON file with the following structure:
       "rootCauseAnalysis": "string",
       "codeFixSuggestion": "string",
       "sourceCodeMapping": {
+        "testSourceFile": "string",
+        "fullPath": "string", 
         "filePath": "string",
         "lineNumber": "integer",
         "testMethod": "string",
-        "testClass": "string"
+        "testClass": "string",
+        "fixLocation": {
+          "targetFile": "string",
+          "targetLines": ["integer"],
+          "bugType": "test_framework|application|automation",
+          "description": "string"
+        }
       },
       "failureDetails": {
         "stackTrace": "string",

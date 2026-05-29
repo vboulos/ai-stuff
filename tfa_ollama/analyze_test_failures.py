@@ -123,10 +123,18 @@ class SkillPromptGenerator:
   "rootCauseAnalysis": "string", 
   "codeFixSuggestion": "string",
   "sourceCodeMapping": {
+    "testSourceFile": "string",
+    "fullPath": "string",
     "filePath": "string",
     "lineNumber": "integer",
     "testMethod": "string",
-    "testClass": "string"
+    "testClass": "string",
+    "fixLocation": {
+      "targetFile": "string",
+      "targetLines": ["integer"],
+      "bugType": "test_framework|application|automation",
+      "description": "string"
+    }
   },
   "failureDetails": {
     "stackTrace": "string",
@@ -168,6 +176,26 @@ Language: {test_source_info.get('language', 'Unknown')}
 SOURCE CODE: Not available - analysis based on failure information only
 """
 
+        # Check if this is an RHACM4K test case
+        is_rhacm_test = 'RHACM4K-' in failure['testCaseName']
+        rhacm_section = ""
+        
+        if is_rhacm_test:
+            rhacm_id = ""
+            import re
+            rhacm_match = re.search(r'RHACM4K-\d+', failure['testCaseName'])
+            if rhacm_match:
+                rhacm_id = rhacm_match.group(0)
+            
+            rhacm_section = f"""
+## RHACM4K ANALYSIS REQUIREMENTS:
+This is an RHACM4K test case ({rhacm_id}). You MUST include:
+1. **Test Source File**: Full path and filename of the source file hosting this test case
+2. **Fix Location**: Exact code block or file requiring modification to fix the failure
+3. **Bug Type**: Distinguish between test_framework, application, or automation bug
+4. **Structural Data**: Provide the enhanced sourceCodeMapping with fixLocation details
+"""
+
         prompt = f"""
 You are an expert test automation engineer implementing the "analyze-test-failures" skill.
 
@@ -178,6 +206,8 @@ You are an expert test automation engineer implementing the "analyze-test-failur
 
 ## Analysis Categories:
 {categories}
+
+{rhacm_section}
 
 TEST FAILURE TO ANALYZE:
 - Test Name: {failure['testCaseName']}
@@ -205,6 +235,7 @@ FOCUS ON:
 3. **Automation Bug Detection**: Distinguish automation bugs from product issues
 4. **Confidence Scoring**: Rate your confidence in the analysis (0.0 to 1.0)
 5. **Categorization**: Classify as automation, infrastructure, product, or environment issue
+{"6. **RHACM4K Requirements**: Include testSourceFile, fixLocation, and enhanced structural data" if is_rhacm_test else ""}
 
 If source code is available, provide line-specific fixes. If not available, provide general guidance.
 
@@ -332,7 +363,12 @@ class JUnitXMLParser:
                     if failure_elem is not None or error_elem is not None:
                         failure_info = self._extract_failure_info(testcase, testsuite, failure_elem, error_elem)
                         failure_info['sourceFile'] = xml_file
-                        failures.append(failure_info)
+                        
+                        # Filter for RHACM4K pattern
+                        test_name = failure_info.get('testCaseName', '')
+                        if 'RHACM4K-' in test_name:
+                            failure_info['rhacmId'] = self._extract_rhacm_id(test_name)
+                            failures.append(failure_info)
             
         except ET.ParseError as e:
             logger.error(f"XML parsing error in {xml_file}: {e}")
@@ -340,6 +376,12 @@ class JUnitXMLParser:
             logger.error(f"Unexpected error parsing {xml_file}: {e}")
         
         return failures
+    
+    def _extract_rhacm_id(self, test_name: str) -> str:
+        """Extract RHACM4K ID from test name"""
+        import re
+        match = re.search(r'RHACM4K-\d+', test_name)
+        return match.group(0) if match else ""
     
     def _extract_failure_info(self, testcase, testsuite, failure_elem, error_elem) -> Dict:
         """Extract failure information from XML elements"""
@@ -411,22 +453,75 @@ class TestFileParser:
         return any(fnmatch.fnmatch(filename, pattern) for pattern in test_patterns)
     
     def find_test_method(self, test_name: str, class_name: str = None) -> Optional[Dict[str, Any]]:
-        """Find a specific test method in the test files"""
+        """Find a specific test method in the test files with enhanced RHACM4K support"""
         
         if not self.test_files_cache:
             self._build_test_cache()
         
         # Try exact match first
         if test_name in self.test_files_cache:
-            return self.test_files_cache[test_name]
+            result = self.test_files_cache[test_name].copy()
+            result.update(self._enhance_rhacm_mapping(test_name, result))
+            return result
         
         # Try fuzzy matching
         for cached_test_name, test_info in self.test_files_cache.items():
             if self._fuzzy_match(test_name, cached_test_name, class_name, test_info.get('class_name')):
-                return test_info
+                result = test_info.copy()
+                result.update(self._enhance_rhacm_mapping(test_name, result))
+                return result
         
         logger.warning(f"Could not find test method: {test_name}")
         return None
+    
+    def _enhance_rhacm_mapping(self, test_name: str, test_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhance test mapping with RHACM4K specific information"""
+        enhancement = {}
+        
+        # Extract RHACM ID if present
+        if 'RHACM4K-' in test_name:
+            import re
+            rhacm_match = re.search(r'RHACM4K-\d+', test_name)
+            if rhacm_match:
+                enhancement['rhacmId'] = rhacm_match.group(0)
+        
+        # Enhance with full path information
+        if 'file_path' in test_info:
+            enhancement['testSourceFile'] = test_info['file_path']
+            enhancement['fullPath'] = os.path.abspath(test_info['file_path'])
+        
+        # Analyze fix location based on file content and test name
+        enhancement['fixLocation'] = self._analyze_fix_location(test_name, test_info)
+        
+        return enhancement
+    
+    def _analyze_fix_location(self, test_name: str, test_info: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze where the fix should be applied"""
+        fix_location = {
+            'targetFile': test_info.get('file_path', 'Unknown'),
+            'targetLines': [test_info.get('line_number', 0)],
+            'bugType': 'automation',  # Default assumption for test failures
+            'description': 'Test automation issue requiring investigation'
+        }
+        
+        # Enhanced logic based on test content analysis
+        source_code = test_info.get('source_code', '')
+        if source_code:
+            # Look for common patterns that indicate different bug types
+            if 'cypress' in source_code.lower() or 'cy.' in source_code:
+                fix_location['bugType'] = 'test_framework'
+                fix_location['description'] = 'Cypress test framework issue'
+            elif 'selenium' in source_code.lower() or 'driver.' in source_code:
+                fix_location['bugType'] = 'test_framework' 
+                fix_location['description'] = 'Selenium test framework issue'
+            elif 'timeout' in test_name.lower() or 'wait' in source_code.lower():
+                fix_location['bugType'] = 'automation'
+                fix_location['description'] = 'Timing or wait condition issue'
+            elif 'assert' in source_code.lower() or 'expect' in source_code.lower():
+                fix_location['bugType'] = 'automation'
+                fix_location['description'] = 'Assertion or expectation issue'
+        
+        return fix_location
     
     def _build_test_cache(self):
         """Build cache of all test methods with their source code"""
