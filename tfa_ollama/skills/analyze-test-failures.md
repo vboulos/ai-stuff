@@ -67,8 +67,13 @@ This skill works with any Jenkins pipeline that produces:
 ### 4. Code Fix Suggestions
 - **Automation Bug Detection**: Identify exact lines needing modification in test files
 - **Targeted Fixes**: Generate specific code changes for identified automation bugs
-- **Best Practice Recommendations**: Suggest improvements for test reliability
-- **Confidence Scoring**: Provide confidence levels for each suggested fix
+- **Line-by-Line Changes**: Provide exact code replacements with before/after examples
+- **Root Cause Deep Dive**: Analyze the underlying technical cause of each failure
+- **Fix Location Precision**: Pinpoint exact file paths, line numbers, and code blocks to modify
+- **Code Replacement Examples**: Show specific code that should be replaced and suggested replacements
+- **Best Practice Recommendations**: Suggest improvements for test reliability and maintainability
+- **Confidence Scoring**: Provide confidence levels (0.0-1.0) for each suggested fix
+- **Impact Assessment**: Evaluate potential side effects and testing requirements for each fix
 
 ### 5. Structured JSON Output
 - **Standardized Schema**: Generate JSON output with consistent structure for each failure
@@ -155,6 +160,17 @@ For test cases matching the pattern "RHACM4K-", extract and map the following st
 - **Fix Location**: Pinpoint the exact code block or file requiring modification to fix the test failure
 - **Bug Type Classification**: Distinguish between test framework bug, application bug, and automation bug
 - **Pattern Matching**: Only process test cases containing the string pattern "RHACM4K-"
+- **Root Cause Analysis**: Provide detailed technical analysis of why the test failed including:
+  - Specific error conditions that triggered the failure
+  - Underlying technical issues (timing, selectors, assertions, data dependencies)
+  - Environmental factors contributing to the failure
+  - Code logic problems or incorrect assumptions
+- **Code Fix Details**: For each failure, provide:
+  - Exact line numbers that need modification
+  - Current problematic code snippets
+  - Suggested code replacements with full context
+  - Explanation of why the change fixes the root cause
+  - Alternative fix approaches if applicable
 
 ### Structural Mapping Output
 For each RHACM4K test failure, provide enhanced structural data:
@@ -170,13 +186,49 @@ For each RHACM4K test failure, provide enhanced structural data:
     "testClass": "TestClassName",
     "language": "javascript|python|java",
     "problematicLines": [123, 124, 125],
-    "suggestedReplacements": ["corrected code line 1", "corrected code line 2"]
+    "currentCode": [
+      "// Line 123: Current problematic code",
+      "cy.get('.selector').should('contain', 'expected text')",
+      "// Line 124: Additional context"
+    ],
+    "suggestedReplacements": [
+      "// Line 123: Fixed code with proper selector",
+      "cy.get('.pf-c-description-list__description').should('contain.text', 'Policy is placed on hub')",
+      "// Line 124: Updated with better wait strategy"
+    ]
+  },
+  "rootCauseAnalysis": {
+    "technicalCause": "Detailed explanation of the technical root cause",
+    "failureConditions": "Specific conditions that triggered the failure",
+    "underlyingIssues": ["timing issue", "selector mismatch", "assertion logic"],
+    "environmentalFactors": "Environmental conditions affecting the test",
+    "codeLogicProblems": "Problems in test logic or assumptions"
+  },
+  "codeFixSuggestion": {
+    "primaryFix": {
+      "description": "Main fix approach description",
+      "fileToModify": "path/to/file/requiring/fix.js",
+      "lineNumbers": [123, 124],
+      "beforeCode": "cy.get('.selector').should('contain', 'text')",
+      "afterCode": "cy.get('.pf-c-description-list__description').should('contain.text', 'Policy is placed on hub')",
+      "explanation": "Why this change fixes the root cause"
+    },
+    "alternativeFixes": [
+      {
+        "description": "Alternative fix approach",
+        "approach": "Different way to solve the same issue",
+        "tradeoffs": "Pros and cons of this approach"
+      }
+    ],
+    "impactAssessment": "Potential side effects and testing requirements",
+    "confidenceScore": 0.9
   },
   "fixLocation": {
     "targetFile": "path/to/file/requiring/fix.js", 
     "targetLines": [123, 124, 125],
     "bugType": "test_framework|application|automation",
-    "description": "Specific description of what needs to be fixed"
+    "description": "Specific description of what needs to be fixed",
+    "codeContext": "Surrounding code context for better understanding"
   }
 }
 ```

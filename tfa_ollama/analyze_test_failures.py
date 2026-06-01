@@ -189,11 +189,27 @@ SOURCE CODE: Not available - analysis based on failure information only
             
             rhacm_section = f"""
 ## RHACM4K ANALYSIS REQUIREMENTS:
-This is an RHACM4K test case ({rhacm_id}). You MUST include:
+This is an RHACM4K test case ({rhacm_id}). You MUST provide DETAILED analysis including:
+
+### ROOT CAUSE ANALYSIS:
+1. **Technical Cause**: Detailed explanation of the technical root cause
+2. **Failure Conditions**: Specific conditions that triggered the failure
+3. **Underlying Issues**: Technical issues like timing, selectors, assertions, data dependencies
+4. **Environmental Factors**: Environmental conditions affecting the test
+5. **Code Logic Problems**: Problems in test logic or incorrect assumptions
+
+### CODE FIX SUGGESTIONS:
+1. **Exact Line Numbers**: Specify which lines need modification
+2. **Current Code**: Show the current problematic code snippets
+3. **Suggested Code**: Provide the exact replacement code
+4. **Fix Explanation**: Explain why this change fixes the root cause
+5. **Alternative Approaches**: Suggest other ways to fix the issue if applicable
+
+### STRUCTURAL DATA REQUIREMENTS:
 1. **Test Source File**: Full path and filename of the source file hosting this test case
-2. **Fix Location**: Exact code block or file requiring modification to fix the failure
+2. **Fix Location**: Exact code block or file requiring modification to fix the failure  
 3. **Bug Type**: Distinguish between test_framework, application, or automation bug
-4. **Structural Data**: Provide the enhanced sourceCodeMapping with fixLocation details
+4. **Enhanced Mapping**: Include problematicLines, currentCode, and suggestedReplacements
 """
 
         prompt = f"""
@@ -230,14 +246,31 @@ Analyze this test failure following the skill specification above. Provide your 
 {self.schema_template}
 
 FOCUS ON:
-1. **Root Cause Analysis**: Based on source code and error, identify the exact cause
-2. **Code Fix Suggestions**: Provide specific, implementable code changes
-3. **Automation Bug Detection**: Distinguish automation bugs from product issues
-4. **Confidence Scoring**: Rate your confidence in the analysis (0.0 to 1.0)
-5. **Categorization**: Classify as automation, infrastructure, product, or environment issue
-{"6. **RHACM4K Requirements**: Include testSourceFile, fixLocation, and enhanced structural data" if is_rhacm_test else ""}
+1. **Deep Root Cause Analysis**: 
+   - Analyze the exact technical cause of the failure
+   - Identify specific conditions that triggered the failure
+   - Examine underlying issues (timing, selectors, assertions, data dependencies)
+   - Consider environmental factors and code logic problems
 
-If source code is available, provide line-specific fixes. If not available, provide general guidance.
+2. **Specific Code Fix Suggestions**: 
+   - Provide EXACT line numbers that need modification
+   - Show the current problematic code snippets
+   - Provide precise replacement code with full context
+   - Explain WHY each change fixes the root cause
+   - Suggest alternative fix approaches when applicable
+
+3. **Enhanced Source Code Mapping**:
+   - Map failure to exact file paths and line numbers
+   - Identify problematic lines and current code
+   - Provide suggested replacements with context
+   - Include language-specific fix recommendations
+
+4. **Automation Bug Detection**: Distinguish automation bugs from product issues
+5. **Confidence Scoring**: Rate your confidence in the analysis (0.0 to 1.0)
+6. **Categorization**: Classify as automation, infrastructure, product, or environment issue
+{"7. **RHACM4K Requirements**: Include testSourceFile, fixLocation, and enhanced structural data" if is_rhacm_test else ""}
+
+CRITICAL: If source code is available, you MUST provide line-specific fixes with exact code changes. If source code is not available, provide detailed guidance on where to look and what to fix.
 
 Return ONLY the JSON structure, no additional text.
 """
@@ -1109,15 +1142,32 @@ class TestFailureAnalyzer:
             # Parse AI response
             analysis_json = self._extract_json_from_response(response)
             if analysis_json:
-                # Enhance with source code mapping if available
+                # Enhance with detailed source code mapping if available
                 if test_source_info:
+                    # Extract problematic lines from the AI response if present
+                    problematic_lines = self._extract_problematic_lines(analysis_json, test_source_info)
+                    current_code = self._extract_current_code(test_source_info, problematic_lines)
+                    suggested_replacements = self._extract_suggested_code(analysis_json)
+                    
                     analysis_json['sourceCodeMapping'] = {
                         'filePath': test_source_info.get('relative_path', 'Unknown'),
+                        'fullPath': test_source_info.get('file_path', 'Unknown'),
                         'lineNumber': test_source_info.get('line_number', 0),
                         'testMethod': test_source_info.get('method_name', failure['testCaseName']),
                         'testClass': test_source_info.get('class_name', failure.get('className', 'Unknown')),
                         'language': test_source_info.get('language', 'unknown'),
-                        'fullPath': test_source_info.get('file_path', 'Unknown')
+                        'problematicLines': problematic_lines,
+                        'currentCode': current_code,
+                        'suggestedReplacements': suggested_replacements
+                    }
+                    
+                    # Add enhanced fix location information
+                    analysis_json['fixLocation'] = {
+                        'targetFile': test_source_info.get('relative_path', 'Unknown'),
+                        'targetLines': problematic_lines,
+                        'bugType': self._determine_bug_type(analysis_json, failure),
+                        'description': analysis_json.get('codeFixSuggestion', 'Fix needed based on analysis'),
+                        'codeContext': current_code
                     }
                 return analysis_json
             
@@ -1416,6 +1466,93 @@ class TestFailureAnalyzer:
         # Calculate success rate
         total = fix_summary['total_fixes']
         fix_summary['success_rate'] = fix_summary['successful_fixes'] / total if total > 0 else 0.0
+    
+    def _extract_problematic_lines(self, analysis_json: Dict, test_source_info: Dict) -> List[int]:
+        """Extract problematic line numbers from analysis or source info"""
+        # Try to get from AI analysis first
+        if 'sourceCodeMapping' in analysis_json and 'problematicLines' in analysis_json['sourceCodeMapping']:
+            return analysis_json['sourceCodeMapping']['problematicLines']
+        
+        # Try to get from fixMetadata
+        if 'fixMetadata' in analysis_json and 'suggestedLines' in analysis_json['fixMetadata']:
+            try:
+                # Extract line numbers from suggested lines
+                lines = []
+                for line_ref in analysis_json['fixMetadata']['suggestedLines']:
+                    if isinstance(line_ref, str) and 'line' in line_ref.lower():
+                        import re
+                        line_nums = re.findall(r'line\s*(\d+)', line_ref.lower())
+                        lines.extend([int(n) for n in line_nums])
+                return lines if lines else [test_source_info.get('line_number', 0)]
+            except:
+                pass
+        
+        # Default to the main method line number
+        return [test_source_info.get('line_number', 0)]
+    
+    def _extract_current_code(self, test_source_info: Dict, problematic_lines: List[int]) -> List[str]:
+        """Extract current code snippets for problematic lines"""
+        source_code = test_source_info.get('source_code', '')
+        if not source_code:
+            return ['// Source code not available']
+        
+        lines = source_code.split('\n')
+        current_code = []
+        
+        for line_num in problematic_lines:
+            if line_num > 0 and line_num <= len(lines):
+                # Add context: line before, problematic line, line after
+                start_idx = max(0, line_num - 2)
+                end_idx = min(len(lines), line_num + 1)
+                
+                for i in range(start_idx, end_idx):
+                    marker = ">>> " if i == line_num - 1 else "    "
+                    current_code.append(f"{marker}Line {i+1}: {lines[i]}")
+        
+        return current_code if current_code else [f"Line {problematic_lines[0] if problematic_lines else 1}: {lines[0] if lines else 'No code available'}"]
+    
+    def _extract_suggested_code(self, analysis_json: Dict) -> List[str]:
+        """Extract suggested code replacements from AI analysis"""
+        # Try to get from sourceCodeMapping first
+        if 'sourceCodeMapping' in analysis_json and 'suggestedReplacements' in analysis_json['sourceCodeMapping']:
+            return analysis_json['sourceCodeMapping']['suggestedReplacements']
+        
+        # Try to get from codeFixSuggestion
+        fix_suggestion = analysis_json.get('codeFixSuggestion', '')
+        if fix_suggestion and '```' in fix_suggestion:
+            # Extract code blocks from fix suggestion
+            import re
+            code_blocks = re.findall(r'```[\w]*\n(.*?)\n```', fix_suggestion, re.DOTALL)
+            if code_blocks:
+                return [block.strip() for block in code_blocks]
+        
+        # Try to extract from fixMetadata suggestedLines
+        if 'fixMetadata' in analysis_json and 'suggestedLines' in analysis_json['fixMetadata']:
+            suggested_lines = analysis_json['fixMetadata']['suggestedLines']
+            if isinstance(suggested_lines, list):
+                return suggested_lines
+        
+        # Fallback to generic suggestion
+        return ['// See codeFixSuggestion for details', fix_suggestion[:100] + '...' if len(fix_suggestion) > 100 else fix_suggestion]
+    
+    def _determine_bug_type(self, analysis_json: Dict, failure: Dict) -> str:
+        """Determine the type of bug based on analysis"""
+        # Check if AI provided explicit bug type
+        if 'fixLocation' in analysis_json and 'bugType' in analysis_json['fixLocation']:
+            return analysis_json['fixLocation']['bugType']
+        
+        # Analyze failure details to categorize
+        category = analysis_json.get('failureDetails', {}).get('category', 'automation')
+        
+        # Map categories to bug types
+        bug_type_mapping = {
+            'automation': 'automation',
+            'infrastructure': 'test_framework', 
+            'product': 'application',
+            'environment': 'test_framework'
+        }
+        
+        return bug_type_mapping.get(category, 'automation')
 
 
 def load_config(config_file: str = 'config.json') -> Dict:
