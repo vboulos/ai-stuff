@@ -212,6 +212,9 @@ This is an RHACM4K test case ({rhacm_id}). You MUST provide DETAILED analysis in
 4. **Enhanced Mapping**: Include problematicLines, currentCode, and suggestedReplacements
 """
 
+        # Create dynamic schema based on actual test source info
+        dynamic_schema = self._create_dynamic_schema(test_source_info, rhacm_id if 'RHACM4K-' in failure['testCaseName'] else None)
+        
         prompt = f"""
 You are an expert test automation engineer implementing the "analyze-test-failures" skill.
 
@@ -243,7 +246,7 @@ BUILD CONTEXT:
 INSTRUCTIONS:
 Analyze this test failure following the skill specification above. Provide your analysis in this EXACT JSON format:
 
-{self.schema_template}
+{dynamic_schema}
 
 FOCUS ON:
 1. **Deep Root Cause Analysis**: 
@@ -276,6 +279,83 @@ Return ONLY the JSON structure, no additional text.
 """
         
         return prompt
+    
+    def _create_dynamic_schema(self, test_source_info: Optional[Dict], rhacm_id: str = None) -> str:
+        """Create dynamic JSON schema with real file paths instead of placeholders"""
+        
+        if test_source_info and rhacm_id:
+            # Use real discovered file information
+            real_file_path = test_source_info.get('relative_path', 'test_file_not_found')
+            real_full_path = test_source_info.get('file_path', 'full_path_not_found')
+            real_line_number = test_source_info.get('line_number', 0)
+            real_method_name = test_source_info.get('method_name', 'method_not_found')
+            real_class_name = test_source_info.get('class_name', 'class_not_found')
+            real_language = test_source_info.get('language', 'unknown')
+            
+            return f'''{{
+  "rhacmId": "{rhacm_id}",
+  "testSourceFile": "{real_full_path}",
+  "testCaseName": "test_case_name",
+  "failureMessage": "failure_message_details",
+  "rootCauseAnalysis": "detailed_technical_root_cause_analysis",
+  "codeFixSuggestion": "specific_code_changes_with_line_numbers",
+  "sourceCodeMapping": {{
+    "filePath": "{real_file_path}",
+    "fullPath": "{real_full_path}",
+    "lineNumber": {real_line_number},
+    "testMethod": "{real_method_name}",
+    "testClass": "{real_class_name}",
+    "language": "{real_language}",
+    "problematicLines": [line_numbers_that_need_fixing],
+    "currentCode": ["current_problematic_code_snippets"],
+    "suggestedReplacements": ["suggested_fixed_code_snippets"]
+  }},
+  "fixLocation": {{
+    "targetFile": "{real_file_path}",
+    "targetLines": [line_numbers_to_fix],
+    "bugType": "automation|test_framework|application",
+    "description": "specific_fix_description",
+    "codeContext": "surrounding_code_context"
+  }},
+  "failureDetails": {{
+    "stackTrace": "stack_trace_details",
+    "errorType": "error_type",
+    "severity": "HIGH|MEDIUM|LOW",
+    "category": "automation|infrastructure|product|environment"
+  }},
+  "fixMetadata": {{
+    "confidenceScore": 0.0_to_1.0,
+    "automationBug": true_or_false,
+    "estimatedEffort": "time_estimate",
+    "suggestedLines": ["specific_line_fixes"]
+  }}
+}}'''
+        else:
+            # Fallback to generic schema when no source code found
+            return '''{{
+  "testCaseName": "test_case_name",
+  "failureMessage": "failure_message_details",
+  "rootCauseAnalysis": "detailed_technical_root_cause_analysis",
+  "codeFixSuggestion": "general_fix_guidance_without_source_code",
+  "sourceCodeMapping": {{
+    "filePath": "source_code_not_available",
+    "lineNumber": 0,
+    "testMethod": "method_not_found",
+    "testClass": "class_not_found",
+    "language": "unknown"
+  }},
+  "failureDetails": {{
+    "stackTrace": "stack_trace_details",
+    "errorType": "error_type",
+    "severity": "HIGH|MEDIUM|LOW", 
+    "category": "automation|infrastructure|product|environment"
+  }},
+  "fixMetadata": {{
+    "confidenceScore": 0.0_to_1.0,
+    "automationBug": true_or_false,
+    "estimatedEffort": "time_estimate"
+  }}
+}}'''
     
     def _extract_section(self, section_header: str) -> str:
         """Extract a specific section from the skill file"""
@@ -520,28 +600,38 @@ class TestFileParser:
     def _find_test_by_rhacm_id(self, rhacm_id: str, test_name: str) -> Optional[Dict[str, Any]]:
         """Search for test file containing the specific RHACM4K ID"""
         logger.info(f"Searching test directories for RHACM4K ID: {rhacm_id}")
+        logger.info(f"Test directories configured: {self.test_directories}")
         
         test_files = self.discover_test_files()
+        logger.info(f"Discovered {len(test_files)} test files: {list(test_files.keys())[:5]}...")
+        
+        if not test_files:
+            logger.warning(f"No test files discovered in directories: {self.test_directories}")
+            return None
         
         for relative_path, full_path in test_files.items():
             try:
                 # Search for RHACM4K ID in file content
+                logger.debug(f"Searching in file: {full_path}")
                 with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
                     content = f.read()
                     
                 if rhacm_id in content:
-                    logger.info(f"Found RHACM4K ID {rhacm_id} in file: {full_path}")
+                    logger.info(f"✓ Found RHACM4K ID {rhacm_id} in file: {full_path}")
                     
                     # Extract detailed information about the test
                     test_info = self._extract_rhacm_test_details(full_path, content, rhacm_id, test_name)
                     if test_info:
+                        logger.info(f"✓ Successfully extracted test details from {full_path}")
                         return test_info
+                else:
+                    logger.debug(f"RHACM4K ID {rhacm_id} not found in {relative_path}")
                         
             except Exception as e:
                 logger.warning(f"Failed to read test file {full_path}: {e}")
                 continue
         
-        logger.warning(f"RHACM4K ID {rhacm_id} not found in any test files")
+        logger.warning(f"❌ RHACM4K ID {rhacm_id} not found in any of {len(test_files)} test files")
         return None
     
     def _extract_rhacm_test_details(self, file_path: str, content: str, rhacm_id: str, test_name: str) -> Dict[str, Any]:
