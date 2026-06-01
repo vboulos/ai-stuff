@@ -157,17 +157,96 @@ For test cases matching the pattern "RHACM4K-", extract and map the following st
 - **Pattern Matching**: Only process test cases containing the string pattern "RHACM4K-"
 
 ### Structural Mapping Output
-For each RHACM4K test failure, provide:
+For each RHACM4K test failure, provide enhanced structural data:
 ```json
 {
   "rhacmId": "RHACM4K-XXXXX",
   "testSourceFile": "full/path/to/test/source/file.js",
+  "sourceCodeMapping": {
+    "filePath": "full/path/to/test/source/file.js",
+    "fullPath": "complete/absolute/path/to/test/source/file.js",
+    "lineNumber": 123,
+    "testMethod": "test_method_name",
+    "testClass": "TestClassName",
+    "language": "javascript|python|java",
+    "problematicLines": [123, 124, 125],
+    "suggestedReplacements": ["corrected code line 1", "corrected code line 2"]
+  },
   "fixLocation": {
     "targetFile": "path/to/file/requiring/fix.js", 
     "targetLines": [123, 124, 125],
     "bugType": "test_framework|application|automation",
     "description": "Specific description of what needs to be fixed"
   }
+}
+```
+
+### Enhanced Output Format Requirements
+When analyzing RHACM4K test failures, generate output that includes both metadata and detailed results structure:
+
+```json
+{
+  "metadata": {
+    "generated_at": "ISO8601_timestamp",
+    "input_file": "source_description",
+    "model": "ai_model_used",
+    "framework": "detected_test_framework",
+    "total_tests": "number",
+    "successful_analyses": "number",
+    "analyze_only": "boolean",
+    "fix_summary": {
+      "total_fixes": "number",
+      "successful_fixes": "number", 
+      "failed_fixes": "number",
+      "success_rate": "float",
+      "fix_type_distribution": {},
+      "priority_distribution": {},
+      "effort_distribution": {}
+    }
+  },
+  "results": [
+    {
+      "test_name": "full_test_name_with_rhacm_id",
+      "framework": "detected_framework", 
+      "rhacmId": "RHACM4K-XXXXX",
+      "original_test": {
+        "name": "test_name",
+        "status": "failed",
+        "failure_message": "error_message",
+        "framework": "framework",
+        "class_name": "test_class",
+        "execution_time": "float",
+        "suite_name": "test_suite"
+      },
+      "analysis": {
+        "success": "boolean",
+        "root_cause": "detailed_analysis",
+        "suggested_fix": "fix_description",
+        "code_example": "code_snippets",
+        "confidence_score": "float",
+        "error_category": "category",
+        "severity": "level",
+        "additional_context": "context",
+        "analyzed_at": "ISO8601_timestamp"
+      },
+      "sourceCodeMapping": {
+        "filePath": "relative/path/to/test/file",
+        "fullPath": "absolute/path/to/test/file", 
+        "lineNumber": "integer",
+        "testMethod": "method_name",
+        "testClass": "class_name",
+        "language": "programming_language",
+        "problematicLines": ["array_of_line_numbers"],
+        "suggestedReplacements": ["array_of_code_fixes"]
+      },
+      "fixLocation": {
+        "targetFile": "path/to/file/needing/fix",
+        "targetLines": ["line_numbers"],
+        "bugType": "automation|infrastructure|product",
+        "description": "fix_description"
+      }
+    }
+  ]
 }
 ```
 

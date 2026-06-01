@@ -986,7 +986,28 @@ class TestFailureAnalyzer:
             logger.info(f"Starting enhanced Jenkins analysis of {pipeline_name} build {build_number}")
             analysis_source = f"{pipeline_name} #{build_number}"
         
+        # Enhanced result format with metadata and results structure
         result = {
+            "metadata": {
+                "generated_at": datetime.utcnow().isoformat(),
+                "input_file": analysis_source,
+                "model": self.ai_config.get('model', 'unknown'),
+                "framework": None,  # Will be detected during analysis
+                "total_tests": 0,
+                "successful_analyses": 0,
+                "analyze_only": False,
+                "fix_summary": {
+                    "total_fixes": 0,
+                    "successful_fixes": 0,
+                    "failed_fixes": 0,
+                    "success_rate": 0.0,
+                    "fix_type_distribution": {},
+                    "priority_distribution": {},
+                    "effort_distribution": {}
+                }
+            },
+            "results": [],
+            # Keep legacy format for backward compatibility
             "analysisMetadata": {
                 "pipeline": pipeline_name or "Local Analysis",
                 "buildNumber": build_number or 0,
@@ -1022,6 +1043,7 @@ class TestFailureAnalyzer:
                 test_failures = self._extract_test_failures(pipeline_name, build_number)
             
             result["analysisMetadata"]["totalFailures"] = len(test_failures)
+            result["metadata"]["total_tests"] = len(test_failures)
             
             if not test_failures:
                 logger.info("No test failures found")
@@ -1029,13 +1051,28 @@ class TestFailureAnalyzer:
             
             # Analyze failures with source code context
             max_failures = options.get('max_failures', 10)
+            successful_analyses = 0
+            
             for i, failure in enumerate(test_failures[:max_failures]):
                 logger.info(f"Analyzing failure {i+1}/{min(len(test_failures), max_failures)}: {failure['testCaseName']}")
                 
                 analysis = self._analyze_failure_with_source_code(failure, build_info, options)
                 if analysis:
+                    successful_analyses += 1
+                    
+                    # Legacy format
                     result["failureAnalysis"].append(analysis)
                     self._update_summary_metrics(analysis, result["summaryMetrics"])
+                    
+                    # Enhanced format
+                    enhanced_result = self._create_enhanced_result_format(failure, analysis, build_info)
+                    result["results"].append(enhanced_result)
+                    
+                    # Update fix summary
+                    self._update_fix_summary(enhanced_result, result["metadata"]["fix_summary"])
+            
+            # Update metadata
+            result["metadata"]["successful_analyses"] = successful_analyses
             
             processing_time = time.time() - start_time
             result["analysisMetadata"]["processingTime"] = f"{processing_time:.1f}s"
@@ -1239,6 +1276,146 @@ class TestFailureAnalyzer:
         """Update summary metrics"""
         category = analysis.get('failureDetails', {}).get('category', 'automation')
         metrics[f"{category}{'Bugs' if category == 'automation' else 'Issues'}"] += 1
+    
+    def _create_enhanced_result_format(self, failure: Dict, analysis: Dict, build_info: Dict) -> Dict:
+        """Create enhanced result format matching the provided example"""
+        rhacm_id = failure.get('rhacmId', '')
+        test_name = failure.get('testCaseName', '')
+        
+        # Extract framework from source code mapping or guess from file extension
+        framework = analysis.get('sourceCodeMapping', {}).get('language', 'junit')
+        if framework == 'javascript':
+            framework = 'jest'
+        elif framework == 'python':
+            framework = 'pytest'
+        
+        # Create the enhanced result
+        enhanced_result = {
+            "test_name": test_name,
+            "framework": framework,
+            "original_test": {
+                "name": test_name,
+                "status": "failed",
+                "failure_message": failure.get('failureMessage', ''),
+                "framework": framework,
+                "class_name": failure.get('className', ''),
+                "execution_time": float(failure.get('duration', 0)),
+                "suite_name": failure.get('suiteName', '')
+            },
+            "analysis": {
+                "success": True,
+                "root_cause": analysis.get('rootCauseAnalysis', ''),
+                "suggested_fix": analysis.get('codeFixSuggestion', ''),
+                "code_example": '',  # Could be enhanced with actual code snippets
+                "confidence_score": analysis.get('fixMetadata', {}).get('confidenceScore', 0.5),
+                "error_category": analysis.get('failureDetails', {}).get('category', 'automation'),
+                "severity": analysis.get('failureDetails', {}).get('severity', 'medium'),
+                "additional_context": '',
+                "raw_response": analysis.get('rootCauseAnalysis', '') + '\n\n' + analysis.get('codeFixSuggestion', ''),
+                "analyzed_at": datetime.utcnow().isoformat()
+            }
+        }
+        
+        # Add RHACM ID if present
+        if rhacm_id:
+            enhanced_result['rhacmId'] = rhacm_id
+        
+        # Add source code mapping if available
+        if 'sourceCodeMapping' in analysis:
+            enhanced_result['sourceCodeMapping'] = analysis['sourceCodeMapping']
+        
+        # Add fix location if available
+        if 'fixLocation' in analysis:
+            enhanced_result['fixLocation'] = analysis['fixLocation']
+        else:
+            # Create a basic fix location from available information
+            enhanced_result['fixLocation'] = {
+                "targetFile": analysis.get('sourceCodeMapping', {}).get('filePath', 'unknown'),
+                "targetLines": analysis.get('sourceCodeMapping', {}).get('problematicLines', []),
+                "bugType": "automation",  # Default for test failures
+                "description": analysis.get('codeFixSuggestion', '')
+            }
+        
+        # Add fix suggestion in the new format
+        enhanced_result['fix_suggestion'] = {
+            "success": True,
+            "fix_type": self._determine_fix_type(analysis),
+            "priority": self._determine_priority(analysis),
+            "estimated_effort": self._determine_effort(analysis),
+            "code_changes": analysis.get('codeFixSuggestion', ''),
+            "configuration_changes": '',
+            "dependencies": '',
+            "validation_steps": [
+                "Verify the fix addresses the root cause",
+                "Run the affected test to ensure it passes",
+                "Check for any regressions in related functionality"
+            ],
+            "prevention": "Consider adding additional test coverage for this scenario",
+            "impact_assessment": "Low to medium impact on test reliability",
+            "rollback_plan": "Revert the changes if issues arise",
+            "raw_response": analysis.get('codeFixSuggestion', ''),
+            "suggested_at": datetime.utcnow().isoformat()
+        }
+        
+        return enhanced_result
+    
+    def _determine_fix_type(self, analysis: Dict) -> str:
+        """Determine fix type from analysis"""
+        category = analysis.get('failureDetails', {}).get('category', 'automation')
+        if category == 'automation':
+            return 'configuration'
+        elif category == 'infrastructure':
+            return 'configuration'
+        else:
+            return 'refactor'
+    
+    def _determine_priority(self, analysis: Dict) -> str:
+        """Determine priority from analysis"""
+        severity = analysis.get('failureDetails', {}).get('severity', 'medium').lower()
+        if severity in ['high', 'critical']:
+            return 'high'
+        elif severity in ['low']:
+            return 'low'
+        else:
+            return 'medium'
+    
+    def _determine_effort(self, analysis: Dict) -> str:
+        """Determine estimated effort from analysis"""
+        effort = analysis.get('fixMetadata', {}).get('estimatedEffort', '30 minutes')
+        if 'hour' in effort.lower() or 'hr' in effort.lower():
+            return '2 hours'
+        else:
+            return '30 minutes'
+    
+    def _update_fix_summary(self, enhanced_result: Dict, fix_summary: Dict):
+        """Update fix summary statistics"""
+        fix_summary['total_fixes'] += 1
+        
+        if enhanced_result['fix_suggestion']['success']:
+            fix_summary['successful_fixes'] += 1
+        else:
+            fix_summary['failed_fixes'] += 1
+        
+        # Update distributions
+        fix_type = enhanced_result['fix_suggestion']['fix_type']
+        priority = enhanced_result['fix_suggestion']['priority'] 
+        effort = enhanced_result['fix_suggestion']['estimated_effort']
+        
+        if fix_type not in fix_summary['fix_type_distribution']:
+            fix_summary['fix_type_distribution'][fix_type] = 0
+        fix_summary['fix_type_distribution'][fix_type] += 1
+        
+        if priority not in fix_summary['priority_distribution']:
+            fix_summary['priority_distribution'][priority] = 0
+        fix_summary['priority_distribution'][priority] += 1
+        
+        if effort not in fix_summary['effort_distribution']:
+            fix_summary['effort_distribution'][effort] = 0
+        fix_summary['effort_distribution'][effort] += 1
+        
+        # Calculate success rate
+        total = fix_summary['total_fixes']
+        fix_summary['success_rate'] = fix_summary['successful_fixes'] / total if total > 0 else 0.0
 
 
 def load_config(config_file: str = 'config.json') -> Dict:
