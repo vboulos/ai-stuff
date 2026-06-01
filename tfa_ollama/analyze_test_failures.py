@@ -491,6 +491,16 @@ class TestFileParser:
         if not self.test_files_cache:
             self._build_test_cache()
         
+        # For RHACM4K tests, search by RHACM ID first
+        rhacm_match = re.search(r'RHACM4K-\d+', test_name)
+        if rhacm_match:
+            rhacm_id = rhacm_match.group(0)
+            logger.info(f"Searching for test with RHACM4K ID: {rhacm_id}")
+            
+            rhacm_result = self._find_test_by_rhacm_id(rhacm_id, test_name)
+            if rhacm_result:
+                return rhacm_result
+        
         # Try exact match first
         if test_name in self.test_files_cache:
             result = self.test_files_cache[test_name].copy()
@@ -506,6 +516,169 @@ class TestFileParser:
         
         logger.warning(f"Could not find test method: {test_name}")
         return None
+    
+    def _find_test_by_rhacm_id(self, rhacm_id: str, test_name: str) -> Optional[Dict[str, Any]]:
+        """Search for test file containing the specific RHACM4K ID"""
+        logger.info(f"Searching test directories for RHACM4K ID: {rhacm_id}")
+        
+        test_files = self.discover_test_files()
+        
+        for relative_path, full_path in test_files.items():
+            try:
+                # Search for RHACM4K ID in file content
+                with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    
+                if rhacm_id in content:
+                    logger.info(f"Found RHACM4K ID {rhacm_id} in file: {full_path}")
+                    
+                    # Extract detailed information about the test
+                    test_info = self._extract_rhacm_test_details(full_path, content, rhacm_id, test_name)
+                    if test_info:
+                        return test_info
+                        
+            except Exception as e:
+                logger.warning(f"Failed to read test file {full_path}: {e}")
+                continue
+        
+        logger.warning(f"RHACM4K ID {rhacm_id} not found in any test files")
+        return None
+    
+    def _extract_rhacm_test_details(self, file_path: str, content: str, rhacm_id: str, test_name: str) -> Dict[str, Any]:
+        """Extract detailed information about RHACM4K test from file content"""
+        lines = content.split('\n')
+        file_extension = os.path.splitext(file_path)[1].lower()
+        
+        # Determine language from file extension
+        language_map = {
+            '.py': 'python',
+            '.js': 'javascript', 
+            '.ts': 'typescript',
+            '.java': 'java',
+            '.rb': 'ruby',
+            '.go': 'go',
+            '.cs': 'csharp',
+            '.php': 'php'
+        }
+        language = language_map.get(file_extension, 'unknown')
+        
+        # Find the line containing the RHACM4K ID
+        rhacm_line_number = 0
+        test_method_name = ""
+        test_class_name = ""
+        source_code_snippet = ""
+        
+        for i, line in enumerate(lines):
+            if rhacm_id in line:
+                rhacm_line_number = i + 1
+                
+                # Extract surrounding context (10 lines before and after)
+                start_line = max(0, i - 10)
+                end_line = min(len(lines), i + 10)
+                source_code_snippet = '\n'.join(lines[start_line:end_line])
+                
+                # Try to find test method and class names based on language
+                test_method_name, test_class_name = self._extract_method_and_class_names(
+                    lines, i, language, rhacm_id
+                )
+                break
+        
+        # Calculate relative path from test directories
+        relative_path = file_path
+        for test_dir in self.test_directories:
+            if file_path.startswith(test_dir):
+                relative_path = os.path.relpath(file_path, test_dir)
+                break
+        
+        return {
+            'file_path': file_path,
+            'relative_path': relative_path, 
+            'line_number': rhacm_line_number,
+            'method_name': test_method_name,
+            'class_name': test_class_name,
+            'language': language,
+            'source_code': source_code_snippet,
+            'rhacmId': rhacm_id,
+            'testSourceFile': file_path,
+            'fullPath': os.path.abspath(file_path)
+        }
+    
+    def _extract_method_and_class_names(self, lines: List[str], rhacm_line: int, language: str, rhacm_id: str) -> Tuple[str, str]:
+        """Extract test method and class names based on programming language"""
+        test_method = ""
+        test_class = ""
+        
+        if language == 'javascript' or language == 'typescript':
+            # Look for describe() and it() blocks in Cypress/Jest
+            for i in range(rhacm_line, max(0, rhacm_line - 50), -1):
+                line = lines[i].strip()
+                
+                # Look for it() or test() method
+                if ('it(' in line or 'test(' in line) and not test_method:
+                    # Extract test name from it('test name', ...)
+                    match = re.search(r'(?:it|test)\s*\(\s*[\'"`]([^\'"`]*)', line)
+                    if match:
+                        test_method = match.group(1)
+                
+                # Look for describe() block
+                if 'describe(' in line and not test_class:
+                    match = re.search(r'describe\s*\(\s*[\'"`]([^\'"`]*)', line)
+                    if match:
+                        test_class = match.group(1)
+                
+                if test_method and test_class:
+                    break
+                    
+        elif language == 'python':
+            # Look for Python test methods and classes
+            for i in range(rhacm_line, max(0, rhacm_line - 50), -1):
+                line = lines[i].strip()
+                
+                # Look for test method (def test_)
+                if line.startswith('def ') and 'test' in line and not test_method:
+                    match = re.search(r'def\s+([^(]+)', line)
+                    if match:
+                        test_method = match.group(1).strip()
+                
+                # Look for test class (class Test)
+                if line.startswith('class ') and not test_class:
+                    match = re.search(r'class\s+([^:(]+)', line)
+                    if match:
+                        test_class = match.group(1).strip()
+                
+                if test_method and test_class:
+                    break
+                    
+        elif language == 'java':
+            # Look for Java test methods and classes
+            for i in range(rhacm_line, max(0, rhacm_line - 50), -1):
+                line = lines[i].strip()
+                
+                # Look for @Test annotation or test method
+                if ('@Test' in line or 'public void test' in line) and not test_method:
+                    # Look for method name in next few lines
+                    for j in range(i, min(len(lines), i + 3)):
+                        method_line = lines[j].strip()
+                        if 'public void' in method_line:
+                            match = re.search(r'public\s+void\s+([^(]+)', method_line)
+                            if match:
+                                test_method = match.group(1).strip()
+                                break
+                
+                # Look for class declaration
+                if line.startswith('public class') and not test_class:
+                    match = re.search(r'public\s+class\s+([^{\s]+)', line)
+                    if match:
+                        test_class = match.group(1).strip()
+                
+                if test_method and test_class:
+                    break
+        
+        # Fallback: use RHACM4K ID as method name if no specific method found
+        if not test_method:
+            test_method = f"test_{rhacm_id.replace('-', '_')}"
+            
+        return test_method, test_class
     
     def _enhance_rhacm_mapping(self, test_name: str, test_info: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance test mapping with RHACM4K specific information"""
