@@ -1302,14 +1302,17 @@ class TestFailureAnalyzer:
                 "fullPath": test_source_info.get('file_path', 'Unknown')
             })
         
+        # Safely handle response which might not be a string
+        safe_response = str(response) if response else "Analysis failed"
+        
         return {
             "testCaseName": failure['testCaseName'],
-            "failureMessage": failure['failureMessage'][:200] + "...",
-            "rootCauseAnalysis": response[:500] + "...",
+            "failureMessage": str(failure['failureMessage'])[:200] + "...",
+            "rootCauseAnalysis": safe_response[:500] + "...",
             "codeFixSuggestion": "See rootCauseAnalysis for details",
             "sourceCodeMapping": source_mapping,
             "failureDetails": {
-                "stackTrace": failure['stackTrace'][:500] + "...",
+                "stackTrace": str(failure.get('stackTrace', ''))[:500] + "...",
                 "errorType": "Unknown",
                 "severity": "MEDIUM",
                 "category": "automation"
@@ -1354,14 +1357,14 @@ class TestFailureAnalyzer:
             },
             "analysis": {
                 "success": True,
-                "root_cause": analysis.get('rootCauseAnalysis', ''),
-                "suggested_fix": analysis.get('codeFixSuggestion', ''),
+                "root_cause": self._safe_get_string(analysis, 'rootCauseAnalysis'),
+                "suggested_fix": self._safe_get_string(analysis, 'codeFixSuggestion'), 
                 "code_example": '',  # Could be enhanced with actual code snippets
                 "confidence_score": analysis.get('fixMetadata', {}).get('confidenceScore', 0.5),
                 "error_category": analysis.get('failureDetails', {}).get('category', 'automation'),
                 "severity": analysis.get('failureDetails', {}).get('severity', 'medium'),
                 "additional_context": '',
-                "raw_response": analysis.get('rootCauseAnalysis', '') + '\n\n' + analysis.get('codeFixSuggestion', ''),
+                "raw_response": self._safe_get_string(analysis, 'rootCauseAnalysis') + '\n\n' + self._safe_get_string(analysis, 'codeFixSuggestion'),
                 "analyzed_at": datetime.utcnow().isoformat()
             }
         }
@@ -1383,7 +1386,7 @@ class TestFailureAnalyzer:
                 "targetFile": analysis.get('sourceCodeMapping', {}).get('filePath', 'unknown'),
                 "targetLines": analysis.get('sourceCodeMapping', {}).get('problematicLines', []),
                 "bugType": "automation",  # Default for test failures
-                "description": analysis.get('codeFixSuggestion', '')
+                "description": self._safe_get_string(analysis, 'codeFixSuggestion')
             }
         
         # Add fix suggestion in the new format
@@ -1392,7 +1395,7 @@ class TestFailureAnalyzer:
             "fix_type": self._determine_fix_type(analysis),
             "priority": self._determine_priority(analysis),
             "estimated_effort": self._determine_effort(analysis),
-            "code_changes": analysis.get('codeFixSuggestion', ''),
+            "code_changes": self._safe_get_string(analysis, 'codeFixSuggestion'),
             "configuration_changes": '',
             "dependencies": '',
             "validation_steps": [
@@ -1403,7 +1406,7 @@ class TestFailureAnalyzer:
             "prevention": "Consider adding additional test coverage for this scenario",
             "impact_assessment": "Low to medium impact on test reliability",
             "rollback_plan": "Revert the changes if issues arise",
-            "raw_response": analysis.get('codeFixSuggestion', ''),
+            "raw_response": self._safe_get_string(analysis, 'codeFixSuggestion'),
             "suggested_at": datetime.utcnow().isoformat()
         }
         
@@ -1553,6 +1556,32 @@ class TestFailureAnalyzer:
         }
         
         return bug_type_mapping.get(category, 'automation')
+    
+    def _safe_get_string(self, data: Dict, key: str) -> str:
+        """Safely extract string value from dictionary, handling dict/object values"""
+        value = data.get(key, '')
+        
+        if isinstance(value, str):
+            return value
+        elif isinstance(value, dict):
+            # If it's a dict, try to extract meaningful string representation
+            if 'technicalCause' in value:
+                return value.get('technicalCause', '')
+            elif 'description' in value:
+                return value.get('description', '')
+            elif 'primaryFix' in value:
+                fix = value.get('primaryFix', {})
+                if isinstance(fix, dict):
+                    return fix.get('description', '') or fix.get('explanation', '')
+                return str(fix)
+            else:
+                # Convert dict to readable string
+                return str(value)
+        elif value is None:
+            return ''
+        else:
+            # Convert other types to string
+            return str(value)
 
 
 def load_config(config_file: str = 'config.json') -> Dict:
