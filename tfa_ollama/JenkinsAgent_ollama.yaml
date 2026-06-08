@@ -41,8 +41,8 @@ spec:
         value: "http://proxy.squi-001.prod.iad2.dc.redhat.com:3128" 
       - name: HTTPS_PROXY
         value: "http://proxy.squi-001.prod.iad2.dc.redhat.com:3128"
-      # - name: NO_PROXY
-      #   value: ".cluster.local,.svc,localhost,.corp.redhat.com"
+      - name: NO_PROXY
+        value: ".cluster.local,.svc,localhost,.corp.redhat.com,.red-chesterfield.com,150.240.97.137,.eng.rdu2.redhat.com,10.1.228.104,10.1.228.0/24"
     resources:
       limits:
         cpu: "3"         # Ollama is CPU intensive for inference without a GPU
