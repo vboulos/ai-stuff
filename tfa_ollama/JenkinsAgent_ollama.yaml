@@ -8,7 +8,8 @@ spec:
   activeDeadlineSeconds: 54000
   containers:
   - name: jnlp
-    image: "image-registry.openshift-image-registry.svc:5000/dno--jenkins-csb-rhacm/tests-jenkins-agent:latest"
+    #image: "image-registry.openshift-image-registry.svc:5000/dno--jenkins-csb-rhacm/tests-jenkins-agent:latest"
+    image: "images.paas.redhat.com/jenkins-csb/inbound-agent-sidecar:latest"
     workingDir: '/home/jenkins'
     env:
       - name: HOME
