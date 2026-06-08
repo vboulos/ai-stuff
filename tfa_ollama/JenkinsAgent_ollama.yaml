@@ -37,6 +37,12 @@ spec:
         value: '/home/jenkins'
       - name: OLLAMA_HOST
         value: '0.0.0.0:11434'
+      - name: HTTP_PROXY
+        value: "http://proxy.squi-001.prod.iad2.dc.redhat.com:3128" 
+      - name: HTTPS_PROXY
+        value: "http://proxy.squi-001.prod.iad2.dc.redhat.com:3128"
+      # - name: NO_PROXY
+      #   value: ".cluster.local,.svc,localhost,.corp.redhat.com"
     resources:
       limits:
         cpu: "3"         # Ollama is CPU intensive for inference without a GPU
