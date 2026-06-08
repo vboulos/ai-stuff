@@ -9,6 +9,7 @@ pipeline {
         kubernetes {
             defaultContainer 'tfa-container'
             yamlFile 'tfa_ollama/JenkinsAgent_ollama.yaml'
+            cloud remote-ocp-cluster-itup-prod
         }
     }
     parameters {

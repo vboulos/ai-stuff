@@ -5,5 +5,11 @@
   },
   "skill": {
     "file_path": "./skills/analyze-test-failures.md"
+  },
+  "memory": {
+    "use_mem0": false,
+    "backend": "local",
+    "storage_path": "failure_memory.json",
+    "feedback_path": "qe_feedback.json"
   }
 }

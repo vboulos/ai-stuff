@@ -22,6 +22,7 @@ from typing import Dict, List, Optional, Any, Tuple
 import requests
 import urllib.parse
 import glob
+from memory import create_memory_manager, FailureMemoryManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -150,13 +151,44 @@ class SkillPromptGenerator:
   }
 }'''
     
-    def generate_analysis_prompt(self, failure: Dict, build_info: Dict, test_source_info: Optional[Dict], options: Dict) -> str:
-        """Generate AI analysis prompt based on skill specification"""
+    def generate_analysis_prompt(self, failure: Dict, build_info: Dict, test_source_info: Optional[Dict], options: Dict, memory_manager: FailureMemoryManager = None) -> str:
+        """Generate AI analysis prompt based on skill specification with memory integration"""
         
         # Extract key sections from skill
         overview = self._extract_section('## Overview')
         core_features = self.core_features
         categories = self.analysis_categories
+        
+        # Search for similar failures in memory
+        similar_failures_section = ""
+        if memory_manager:
+            try:
+                similar_failures = memory_manager.search_similar_failures(
+                    test_name=failure['testCaseName'],
+                    failure_message=failure.get('failureMessage', ''),
+                    error_category=failure.get('category', 'automation'),
+                    framework=test_source_info.get('language', 'unknown') if test_source_info else None,
+                    limit=3
+                )
+                
+                if similar_failures:
+                    similar_failures_section = "\n## SIMILAR FAILURES FROM MEMORY:\n"
+                    for i, similar in enumerate(similar_failures, 1):
+                        similar_failures_section += f"""
+### Similar Failure #{i} (Similarity: {similar['similarity_score']:.2f})
+- **Test**: {similar['test_name']}
+- **Root Cause**: {similar['root_cause']}
+- **Solution**: {similar['fix_solution']}
+- **Framework**: {similar['framework']}
+- **Category**: {similar['error_category']}
+- **Confidence**: {similar['confidence_score']}
+"""
+                    similar_failures_section += "\nUSE THIS HISTORICAL KNOWLEDGE to inform your analysis and provide better solutions.\n"
+                else:
+                    logger.info("No similar failures found in memory - this might be a new failure pattern")
+            except Exception as e:
+                logger.warning(f"Failed to search memory: {e}")
+                similar_failures_section = ""
         
         # Build source code section
         source_code_section = ""
@@ -247,6 +279,8 @@ INSTRUCTIONS:
 Analyze this test failure following the skill specification above. Provide your analysis in this EXACT JSON format:
 
 {dynamic_schema}
+
+{similar_failures_section}
 
 FOCUS ON:
 1. **Deep Root Cause Analysis**: 
@@ -1231,6 +1265,7 @@ class TestFailureAnalyzer:
         self.test_config = config.get('test_source', {})
         self.local_config = config.get('local_junit', {})
         self.skill_config = config.get('skill', {})
+        self.memory_config = config.get('memory', {})
         self.ai_provider = self._create_ai_provider()
         
         # Initialize skill-based prompt generator
@@ -1251,6 +1286,18 @@ class TestFailureAnalyzer:
             self.junit_parser = JUnitXMLParser(xml_paths)
         else:
             self.junit_parser = None
+            
+        # Initialize memory manager
+        try:
+            if not self.memory_config.get('disabled', False):
+                self.memory_manager = create_memory_manager(self.memory_config)
+                logger.info(f"Initialized memory manager with backend: {self.memory_manager._get_local_stats()['backend'] if hasattr(self.memory_manager, '_get_local_stats') else 'unknown'}")
+            else:
+                self.memory_manager = None
+                logger.info("Memory functionality disabled")
+        except Exception as e:
+            logger.warning(f"Failed to initialize memory manager: {e}")
+            self.memory_manager = None
     
     def _create_ai_provider(self) -> AIProvider:
         """Create AI provider based on configuration"""
@@ -1393,7 +1440,7 @@ class TestFailureAnalyzer:
                     failure.get('className')
                 )
             
-            # Build enhanced analysis prompt with source code
+            # Build enhanced analysis prompt with source code and memory
             prompt = self._build_enhanced_analysis_prompt(failure, build_info, test_source_info, options)
             
             # Get AI analysis
@@ -1432,6 +1479,11 @@ class TestFailureAnalyzer:
                         'description': analysis_json.get('codeFixSuggestion', 'Fix needed based on analysis'),
                         'codeContext': current_code
                     }
+                
+                # Add successful analysis to memory for future learning
+                if self.memory_manager and analysis_json:
+                    self._add_to_memory(failure, analysis_json, test_source_info)
+                
                 return analysis_json
             
             # Fallback analysis
@@ -1443,7 +1495,66 @@ class TestFailureAnalyzer:
     
     def _build_enhanced_analysis_prompt(self, failure: Dict, build_info: Dict, test_source_info: Optional[Dict], options: Dict) -> str:
         """Build enhanced analysis prompt using skill-based prompt generator"""
-        return self.prompt_generator.generate_analysis_prompt(failure, build_info, test_source_info, options)
+        return self.prompt_generator.generate_analysis_prompt(failure, build_info, test_source_info, options, self.memory_manager)
+    
+    def _add_to_memory(self, failure: Dict, analysis_json: Dict, test_source_info: Optional[Dict]):
+        """Add successful analysis to memory for future learning"""
+        try:
+            # Extract information for memory storage
+            test_name = failure.get('testCaseName', '')
+            failure_pattern = failure.get('failureMessage', '')
+            root_cause = self._safe_get_string(analysis_json, 'rootCauseAnalysis')
+            fix_solution = self._safe_get_string(analysis_json, 'codeFixSuggestion')
+            framework = test_source_info.get('language', 'unknown') if test_source_info else 'unknown'
+            error_category = analysis_json.get('failureDetails', {}).get('category', 'automation')
+            severity = analysis_json.get('failureDetails', {}).get('severity', 'medium')
+            confidence_score = analysis_json.get('fixMetadata', {}).get('confidenceScore', 0.8)
+            rhacm_id = analysis_json.get('rhacmId') or failure.get('rhacmId')
+            source_file = test_source_info.get('relative_path') if test_source_info else None
+            
+            # Additional metadata
+            metadata = {
+                'analysis_timestamp': datetime.utcnow().isoformat(),
+                'failure_type': analysis_json.get('failureDetails', {}).get('errorType', ''),
+                'class_name': failure.get('className', ''),
+                'suite_name': failure.get('suiteName', ''),
+                'duration': failure.get('duration', 0)
+            }
+            
+            # Add to memory
+            memory_id = self.memory_manager.add_failure_learning(
+                test_name=test_name,
+                failure_pattern=failure_pattern,
+                root_cause=root_cause,
+                fix_solution=fix_solution,
+                framework=framework,
+                error_category=error_category,
+                severity=severity,
+                confidence_score=confidence_score,
+                rhacm_id=rhacm_id,
+                source_file=source_file,
+                metadata=metadata
+            )
+            
+            logger.info(f"Added analysis to memory with ID: {memory_id}")
+            
+        except Exception as e:
+            logger.warning(f"Failed to add analysis to memory: {e}")
+    
+    def store_qe_feedback(self, memory_id: str, feedback: Dict) -> bool:
+        """Store QE review feedback for a failure analysis"""
+        if not self.memory_manager:
+            logger.warning("No memory manager available for storing QE feedback")
+            return False
+        
+        return self.memory_manager.store_qe_feedback(memory_id, feedback)
+    
+    def get_memory_stats(self) -> Dict:
+        """Get memory statistics"""
+        if not self.memory_manager:
+            return {'backend': 'none', 'total_memories': 0}
+        
+        return self.memory_manager.get_memory_stats()
     
     def _get_build_info(self, pipeline_name: str, build_number: int) -> Optional[Dict]:
         """Fetch build information from Jenkins"""
@@ -1861,64 +1972,77 @@ def load_config(config_file: str = 'config.json') -> Dict:
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='Enhanced Test Failure Analysis with Source Code - Jenkins or Local Mode')
+    # Check if this is legacy mode first
+    import sys
+    legacy_mode = len(sys.argv) > 1 and sys.argv[1] not in ['jenkins', 'local']
     
-    # Mode selection
-    subparsers = parser.add_subparsers(dest='mode', help='Analysis mode')
-    
-    # Jenkins mode
-    jenkins_parser = subparsers.add_parser('jenkins', help='Analyze failures from Jenkins build')
-    jenkins_parser.add_argument('pipeline_name', help='Jenkins pipeline name')
-    jenkins_parser.add_argument('build_number', type=int, help='Build number')
-    jenkins_parser.add_argument('--config', default='config.json', help='Config file')
-    jenkins_parser.add_argument('--output', help='Output JSON file')
-    jenkins_parser.add_argument('--max-failures', type=int, default=10, help='Max failures to analyze')
-    jenkins_parser.add_argument('--test-dirs', nargs='*', help='Test source directories to scan')
-    jenkins_parser.add_argument('--skill-file', help='Custom skill file path for AI prompts')
-    
-    # Local mode
-    local_parser = subparsers.add_parser('local', help='Analyze failures from local JUnit XML files')
-    local_parser.add_argument('xml_paths', nargs='+', help='JUnit XML file paths or directories')
-    local_parser.add_argument('--config', default='config.json', help='Config file')
-    local_parser.add_argument('--output', help='Output JSON file')
-    local_parser.add_argument('--max-failures', type=int, default=10, help='Max failures to analyze')
-    local_parser.add_argument('--test-dirs', nargs='*', help='Test source directories to scan')
-    local_parser.add_argument('--skill-file', help='Custom skill file path for AI prompts')
-    
-    # Legacy mode (backwards compatibility)
-    parser.add_argument('pipeline_name', nargs='?', help='Jenkins pipeline name (legacy mode)')
-    parser.add_argument('build_number', nargs='?', type=int, help='Build number (legacy mode)')
-    parser.add_argument('--config', default='config.json', help='Config file')
-    parser.add_argument('--output', help='Output JSON file')
-    parser.add_argument('--max-failures', type=int, default=10, help='Max failures to analyze')
-    parser.add_argument('--test-dirs', nargs='*', help='Test source directories to scan')
-    parser.add_argument('--xml-files', nargs='*', help='JUnit XML files for local analysis')
-    parser.add_argument('--skill-file', help='Custom skill file path for AI prompts')
+    if legacy_mode:
+        # Use legacy argument parser
+        parser = argparse.ArgumentParser(description='Enhanced Test Failure Analysis with Source Code - Legacy Mode')
+        parser.add_argument('pipeline_name', nargs='?', help='Jenkins pipeline name (legacy mode)')
+        parser.add_argument('build_number', nargs='?', type=int, help='Build number (legacy mode)')
+        parser.add_argument('--config', default='config.json', help='Config file')
+        parser.add_argument('--output', help='Output JSON file')
+        parser.add_argument('--max-failures', type=int, default=10, help='Max failures to analyze')
+        parser.add_argument('--test-dirs', nargs='*', help='Test source directories to scan')
+        parser.add_argument('--xml-files', nargs='*', help='JUnit XML files for local analysis')
+        parser.add_argument('--skill-file', help='Custom skill file path for AI prompts')
+    else:
+        # Use new subparser system
+        parser = argparse.ArgumentParser(description='Enhanced Test Failure Analysis with Source Code - Jenkins or Local Mode')
+        
+        # Mode selection
+        subparsers = parser.add_subparsers(dest='mode', help='Analysis mode', required=True)
+        
+        # Jenkins mode
+        jenkins_parser = subparsers.add_parser('jenkins', help='Analyze failures from Jenkins build')
+        jenkins_parser.add_argument('pipeline_name', help='Jenkins pipeline name')
+        jenkins_parser.add_argument('build_number', type=int, help='Build number')
+        jenkins_parser.add_argument('--config', default='config.json', help='Config file')
+        jenkins_parser.add_argument('--output', help='Output JSON file')
+        jenkins_parser.add_argument('--max-failures', type=int, default=10, help='Max failures to analyze')
+        jenkins_parser.add_argument('--test-dirs', nargs='*', help='Test source directories to scan')
+        jenkins_parser.add_argument('--skill-file', help='Custom skill file path for AI prompts')
+        jenkins_parser.add_argument('--memory-backend', choices=['local', 'mem0'], default='local', help='Memory backend to use')
+        jenkins_parser.add_argument('--disable-memory', action='store_true', help='Disable memory functionality')
+        
+        # Local mode
+        local_parser = subparsers.add_parser('local', help='Analyze failures from local JUnit XML files')
+        local_parser.add_argument('xml_paths', nargs='+', help='JUnit XML file paths or directories')
+        local_parser.add_argument('--config', default='config.json', help='Config file')
+        local_parser.add_argument('--output', help='Output JSON file')
+        local_parser.add_argument('--max-failures', type=int, default=10, help='Max failures to analyze')
+        local_parser.add_argument('--test-dirs', nargs='*', help='Test source directories to scan')
+        local_parser.add_argument('--skill-file', help='Custom skill file path for AI prompts')
+        local_parser.add_argument('--memory-backend', choices=['local', 'mem0'], default='local', help='Memory backend to use')
+        local_parser.add_argument('--disable-memory', action='store_true', help='Disable memory functionality')
     
     args = parser.parse_args()
     
     # Handle different modes
-    if args.mode == 'jenkins':
-        # Jenkins mode
-        pipeline_name = args.pipeline_name
-        build_number = args.build_number
-        xml_paths = None
-        mode = 'jenkins'
-    elif args.mode == 'local':
-        # Local mode
-        pipeline_name = None
-        build_number = None
-        xml_paths = args.xml_paths
-        mode = 'local'
+    if not legacy_mode:
+        # New subcommand mode
+        if args.mode == 'jenkins':
+            pipeline_name = args.pipeline_name
+            build_number = args.build_number
+            xml_paths = None
+            mode = 'jenkins'
+        elif args.mode == 'local':
+            pipeline_name = None
+            build_number = None
+            xml_paths = args.xml_paths
+            mode = 'local'
+        else:
+            parser.error("Invalid mode specified")
     else:
         # Legacy mode - determine based on arguments
-        if args.xml_files:
+        if hasattr(args, 'xml_files') and args.xml_files:
             # Local mode (using legacy --xml-files)
             pipeline_name = None
             build_number = None
             xml_paths = args.xml_files
             mode = 'local'
-        elif args.pipeline_name and args.build_number is not None:
+        elif hasattr(args, 'pipeline_name') and args.pipeline_name and hasattr(args, 'build_number') and args.build_number is not None:
             # Jenkins mode (legacy)
             pipeline_name = args.pipeline_name
             build_number = args.build_number
@@ -1944,6 +2068,22 @@ def main():
         if 'skill' not in config:
             config['skill'] = {}
         config['skill']['file_path'] = args.skill_file
+    
+    # Configure memory settings from command line (only for new mode)
+    if hasattr(args, 'memory_backend') or hasattr(args, 'disable_memory'):
+        if 'memory' not in config:
+            config['memory'] = {}
+        
+        if hasattr(args, 'disable_memory') and args.disable_memory:
+            config['memory']['use_mem0'] = False
+            config['memory']['disabled'] = True
+        elif hasattr(args, 'memory_backend'):
+            config['memory']['use_mem0'] = (args.memory_backend == 'mem0')
+            config['memory']['backend'] = args.memory_backend
+    elif legacy_mode:
+        # For legacy mode, use default memory settings or config file
+        if 'memory' not in config:
+            config['memory'] = {'use_mem0': False, 'backend': 'local'}
     
     # Configure for local mode if needed
     if mode == 'local':
@@ -1984,6 +2124,18 @@ def main():
     print(f"Infrastructure Issues: {result['summaryMetrics']['infrastructureIssues']}")
     print(f"Product Issues: {result['summaryMetrics']['productIssues']}")
     print(f"Environment Issues: {result['summaryMetrics']['environmentIssues']}")
+    
+    # Print memory stats if available
+    memory_stats = analyzer.get_memory_stats()
+    if memory_stats.get('backend') != 'none':
+        print(f"\n=== MEMORY STATISTICS ===")
+        print(f"Backend: {memory_stats.get('backend', 'unknown')}")
+        print(f"Total Stored Memories: {memory_stats.get('total_memories', 0)}")
+        if 'categories' in memory_stats:
+            print(f"Categories: {memory_stats['categories']}")
+        if 'frameworks' in memory_stats:
+            print(f"Frameworks: {memory_stats['frameworks']}")
+    
     print(f"\nResults saved to: {output_file}")
 
 
