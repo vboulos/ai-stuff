@@ -38,7 +38,7 @@ spec:
         value: '0.0.0.0:11434'
     resources:
       limits:
-        cpu: "4"         # Ollama is CPU intensive for inference without a GPU
+        cpu: "3"         # Ollama is CPU intensive for inference without a GPU
         memory: 8Gi      # 4Gi is the minimum for small models
       requests:
         cpu: "1"
